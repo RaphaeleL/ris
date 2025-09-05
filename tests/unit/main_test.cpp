@@ -29,16 +29,4 @@ int test_main_basic() {
     return 0;
 }
 
-int main() {
-    int result = 0;
-    
-    result += test_main_basic();
-    
-    if (result == 0) {
-        std::cout << "All tests passed!" << std::endl;
-    } else {
-        std::cout << result << " test(s) failed!" << std::endl;
-    }
-    
-    return result;
-}
+// Test functions are defined above, main() is in test_runner.cpp

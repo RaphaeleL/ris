@@ -23,6 +23,7 @@ HEADERS = $(wildcard $(INCLUDE_DIR)/*.h)
 
 # Test files
 UNIT_TESTS = $(wildcard $(TEST_DIR)/unit/*_test.cpp)
+TEST_RUNNER = $(TEST_DIR)/unit/test_runner.cpp
 INTEGRATION_TESTS = $(wildcard $(TEST_DIR)/integration/*.c)
 
 # Main targets
@@ -31,6 +32,7 @@ TEST_TARGET = $(BIN_DIR)/risc_test
 
 # Test object files
 TEST_OBJECTS = $(UNIT_TESTS:$(TEST_DIR)/unit/%_test.cpp=$(BUILD_DIR)/%_test.o)
+TEST_RUNNER_OBJ = $(BUILD_DIR)/test_runner.o
 
 # Default target
 all: $(TARGET)
@@ -44,18 +46,22 @@ $(BIN_DIR):
 
 # Main compiler executable
 $(TARGET): $(OBJECTS) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS)
+	$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS) -lc++
 
 # Object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS) | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
 # Test executable
-$(TEST_TARGET): $(TEST_OBJECTS) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS)
+$(TEST_TARGET): $(TEST_RUNNER_OBJ) $(TEST_OBJECTS) $(filter-out build/main.o, $(OBJECTS)) | $(BIN_DIR)
+	$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS) -lc++
 
 # Test object files
 $(BUILD_DIR)/%_test.o: $(TEST_DIR)/unit/%_test.cpp $(HEADERS) | $(BUILD_DIR)
+	$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+
+# Test runner object file
+$(TEST_RUNNER_OBJ): $(TEST_RUNNER) $(HEADERS) | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
 # Check LLVM installation

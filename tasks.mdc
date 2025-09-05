@@ -7,7 +7,7 @@ Core MVP (minimum viable compiler)
 - Acceptance: `make check` returns installed LLVM >= 12, prints tool versions.
 - Tests: script unit test via `make check`.
 
-2. T010 - Lexer (tokenizer) — TODO
+2. T010 - Lexer (tokenizer) — DONE
 - Deliverables: lexer implementation, token definitions, unit tests for tokenization of all language tokens (identifiers, keywords, literals, operators, punctuation).
 - Acceptance: tests pass; example `lexer_tests/*.c` tokenized into expected token sequences.
 - Tests: AST structural equality tests for each grammar rule.

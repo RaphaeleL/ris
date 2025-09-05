@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream>
+#include "lexer.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "RIS Compiler v0.1.0" << std::endl;
@@ -24,8 +26,34 @@ int main(int argc, char* argv[]) {
     std::cout << "Input file: " << input_file << std::endl;
     std::cout << "Output file: " << output_file << std::endl;
     
-    // TODO: Implement actual compilation pipeline
-    std::cout << "Compilation not yet implemented." << std::endl;
+    // Read input file
+    std::ifstream file(input_file);
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open input file " << input_file << std::endl;
+        return 1;
+    }
+    
+    std::string source((std::istreambuf_iterator<char>(file)),
+                      std::istreambuf_iterator<char>());
+    file.close();
+    
+    // Tokenize the source
+    ris::Lexer lexer(source);
+    auto tokens = lexer.tokenize();
+    
+    if (lexer.has_error()) {
+        std::cerr << "Lexer error: " << lexer.error_message() << std::endl;
+        return 1;
+    }
+    
+    std::cout << "Tokenized " << tokens.size() << " tokens:" << std::endl;
+    for (const auto& token : tokens) {
+        if (token.type != ris::TokenType::EOF_TOKEN) {
+            std::cout << "  " << token.to_string() << std::endl;
+        }
+    }
+    
+    // TODO: Implement parser, semantic analysis, and code generation
     
     return 0;
 }
