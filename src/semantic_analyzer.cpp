@@ -266,7 +266,7 @@ void SemanticAnalyzer::analyze_function(FuncDecl& func) {
     symbol_table_.exit_scope();
 }
 
-void SemanticAnalyzer::analyze_variable_declaration(VarDecl& var, bool is_global) {
+void SemanticAnalyzer::analyze_variable_declaration(VarDecl& var, bool /* is_global */) {
     std::unique_ptr<Type> var_type;
     
     if (var.is_array) {
@@ -560,7 +560,7 @@ void SemanticAnalyzer::analyze_struct_access_expression(StructAccessExpr& expr) 
     // TODO: Check if object has the field
 }
 
-void SemanticAnalyzer::analyze_literal_expression(LiteralExpr& expr) {
+void SemanticAnalyzer::analyze_literal_expression(LiteralExpr& /* expr */) {
     // Literals are always valid
 }
 

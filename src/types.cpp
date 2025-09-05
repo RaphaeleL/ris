@@ -104,7 +104,7 @@ bool ArrayType::is_assignable_from(const Type& other) const {
     return false;
 }
 
-bool ArrayType::is_comparable_with(const Type& other) const {
+bool ArrayType::is_comparable_with(const Type& /* other */) const {
     // Arrays are not comparable
     return false;
 }
@@ -141,12 +141,12 @@ std::string FunctionType::to_string() const {
     return ss.str();
 }
 
-bool FunctionType::is_assignable_from(const Type& other) const {
+bool FunctionType::is_assignable_from(const Type& /* other */) const {
     // Functions are not assignable
     return false;
 }
 
-bool FunctionType::is_comparable_with(const Type& other) const {
+bool FunctionType::is_comparable_with(const Type& /* other */) const {
     // Functions are not comparable
     return false;
 }

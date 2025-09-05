@@ -68,7 +68,7 @@ llvm::Type* CodeGenerator::get_llvm_type(const Type& type) {
             case PrimitiveType::Kind::CHAR:
                 return llvm::Type::getInt8Ty(*context_);
             case PrimitiveType::Kind::STRING:
-                return llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0);
+                return llvm::PointerType::get(*context_, 0);
             case PrimitiveType::Kind::VOID:
                 return llvm::Type::getVoidTy(*context_);
             default:
@@ -93,7 +93,7 @@ llvm::Type* CodeGenerator::get_llvm_type(const std::string& type_name) {
     } else if (type_name == "char") {
         return llvm::Type::getInt8Ty(*context_);
     } else if (type_name == "string") {
-        return llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0);
+        return llvm::PointerType::get(*context_, 0);
     } else if (type_name == "void") {
         return llvm::Type::getVoidTy(*context_);
     }
@@ -199,7 +199,7 @@ void CodeGenerator::generate_variable_declaration(VarDecl& var, bool is_global) 
             error("Array initialization not yet implemented");
             return;
         } else {
-            initial_value = generate_expression(*var.initializer);
+        initial_value = generate_expression(*var.initializer);
         }
     } else {
         // Create default initial value
@@ -207,16 +207,16 @@ void CodeGenerator::generate_variable_declaration(VarDecl& var, bool is_global) 
             // Arrays are zero-initialized by default
             initial_value = llvm::ConstantAggregateZero::get(var_type);
         } else {
-            if (var.type == "int") {
-                initial_value = llvm::ConstantInt::get(var_type, 0);
-            } else if (var.type == "float") {
-                initial_value = llvm::ConstantFP::get(var_type, 0.0);
-            } else if (var.type == "bool") {
-                initial_value = llvm::ConstantInt::get(var_type, 0);
-            } else if (var.type == "char") {
-                initial_value = llvm::ConstantInt::get(var_type, 0);
-            } else if (var.type == "string") {
-                initial_value = llvm::ConstantPointerNull::get(llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0));
+        if (var.type == "int") {
+            initial_value = llvm::ConstantInt::get(var_type, 0);
+        } else if (var.type == "float") {
+            initial_value = llvm::ConstantFP::get(var_type, 0.0);
+        } else if (var.type == "bool") {
+            initial_value = llvm::ConstantInt::get(var_type, 0);
+        } else if (var.type == "char") {
+            initial_value = llvm::ConstantInt::get(var_type, 0);
+        } else if (var.type == "string") {
+            initial_value = llvm::ConstantPointerNull::get(llvm::PointerType::get(*context_, 0));
             }
         }
     }
@@ -631,7 +631,7 @@ llvm::Value* CodeGenerator::generate_array_assignment(ArrayIndexExpr& expr, llvm
     // Check if it's an array type
     if (!llvm::isa<llvm::ArrayType>(array_type)) {
         error("Variable is not an array");
-        return nullptr;
+    return nullptr;
     }
     
     auto* array_llvm_type = llvm::dyn_cast<llvm::ArrayType>(array_type);
@@ -701,7 +701,7 @@ llvm::Value* CodeGenerator::generate_array_assignment(ArrayIndexExpr& expr, llvm
     return value; // Return the assigned value
 }
 
-llvm::Value* CodeGenerator::generate_struct_access_expression(StructAccessExpr& expr) {
+llvm::Value* CodeGenerator::generate_struct_access_expression(StructAccessExpr& /* expr */) {
     // Simplified implementation
     error("Struct access not yet implemented");
     return nullptr;
@@ -741,7 +741,7 @@ void CodeGenerator::generate_if_statement(IfStmt& stmt) {
         bool else_returns = false;
         
         if (stmt.then_branch) {
-            if (auto* return_stmt = dynamic_cast<ReturnStmt*>(stmt.then_branch.get())) {
+            if (dynamic_cast<ReturnStmt*>(stmt.then_branch.get())) {
                 then_returns = true;
             } else if (auto* block_stmt = dynamic_cast<BlockStmt*>(stmt.then_branch.get())) {
                 // Check if block contains only a return statement
@@ -752,7 +752,7 @@ void CodeGenerator::generate_if_statement(IfStmt& stmt) {
         }
         
         if (stmt.else_branch) {
-            if (auto* return_stmt = dynamic_cast<ReturnStmt*>(stmt.else_branch.get())) {
+            if (dynamic_cast<ReturnStmt*>(stmt.else_branch.get())) {
                 else_returns = true;
             } else if (auto* block_stmt = dynamic_cast<BlockStmt*>(stmt.else_branch.get())) {
                 // Check if block contains only a return statement
@@ -950,7 +950,7 @@ void CodeGenerator::declare_runtime_functions() {
     auto int64_type = llvm::Type::getInt64Ty(*context_);
     auto int8_type = llvm::Type::getInt8Ty(*context_);
     auto double_type = llvm::Type::getDoubleTy(*context_);
-    auto string_type = llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0);
+    auto string_type = llvm::PointerType::get(*context_, 0);
     auto size_t_type = llvm::Type::getInt64Ty(*context_);
     auto int32_type = llvm::Type::getInt32Ty(*context_);
     
@@ -1033,14 +1033,14 @@ void CodeGenerator::declare_runtime_functions() {
     
     // ris_malloc
     {
-        auto func_type = llvm::FunctionType::get(llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0), {size_t_type}, false);
+        auto func_type = llvm::FunctionType::get(llvm::PointerType::get(*context_, 0), {size_t_type}, false);
         auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_malloc", module_.get());
         functions_["ris_malloc"] = func;
     }
     
     // ris_free
     {
-        auto func_type = llvm::FunctionType::get(void_type, {llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0)}, false);
+        auto func_type = llvm::FunctionType::get(void_type, {llvm::PointerType::get(*context_, 0)}, false);
         auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_free", module_.get());
         functions_["ris_free"] = func;
     }
@@ -1061,14 +1061,14 @@ void CodeGenerator::declare_runtime_functions() {
     
     // ris_array_alloc
     {
-        auto func_type = llvm::FunctionType::get(llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0), {size_t_type, size_t_type}, false);
+        auto func_type = llvm::FunctionType::get(llvm::PointerType::get(*context_, 0), {size_t_type, size_t_type}, false);
         auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_array_alloc", module_.get());
         functions_["ris_array_alloc"] = func;
     }
     
     // ris_array_free
     {
-        auto func_type = llvm::FunctionType::get(void_type, {llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0)}, false);
+        auto func_type = llvm::FunctionType::get(void_type, {llvm::PointerType::get(*context_, 0)}, false);
         auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_array_free", module_.get());
         functions_["ris_array_free"] = func;
     }
