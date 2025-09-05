@@ -123,6 +123,27 @@ std::unique_ptr<Type> SemanticAnalyzer::analyze_expression_type(Expr& expr) {
             default:
                 return create_type("int");
         }
+    } else if (auto* array_access = dynamic_cast<ArrayIndexExpr*>(&expr)) {
+        // For array access, return the element type of the array
+        Symbol* symbol = symbol_table_.lookup(dynamic_cast<IdentifierExpr*>(array_access->array.get())->name);
+        if (symbol && symbol->kind() == Symbol::Kind::VARIABLE) {
+            auto* var_symbol = static_cast<VariableSymbol*>(symbol);
+            if (var_symbol->is_array()) {
+                // Get the element type from the array type
+                if (auto* array_type = dynamic_cast<const ArrayType*>(&var_symbol->type())) {
+                    return create_type(array_type->element_type().to_string());
+                }
+            }
+        }
+        return create_type("int"); // Default fallback
+    } else if (auto* call = dynamic_cast<CallExpr*>(&expr)) {
+        // For function calls, return the return type of the function
+        Symbol* symbol = symbol_table_.lookup(call->function_name);
+        if (symbol && symbol->kind() == Symbol::Kind::FUNCTION) {
+            auto* func_symbol = static_cast<FunctionSymbol*>(symbol);
+            return create_type(func_symbol->return_type().to_string());
+        }
+        return create_type("int"); // Default fallback
     }
     // For now, return int as default
     return create_type("int");
@@ -246,10 +267,23 @@ void SemanticAnalyzer::analyze_function(FuncDecl& func) {
 }
 
 void SemanticAnalyzer::analyze_variable_declaration(VarDecl& var, bool is_global) {
-    auto var_type = analyze_type(var.type);
-    if (!var_type) {
-        error("Unknown variable type: " + var.type, var.position);
-        return;
+    std::unique_ptr<Type> var_type;
+    
+    if (var.is_array) {
+        // Create array type
+        auto element_type = analyze_type(var.type);
+        if (!element_type) {
+            error("Unknown array element type: " + var.type, var.position);
+            return;
+        }
+        var_type = create_array_type(std::move(element_type), var.array_size);
+    } else {
+        // Regular variable type
+        var_type = analyze_type(var.type);
+        if (!var_type) {
+            error("Unknown variable type: " + var.type, var.position);
+            return;
+        }
     }
     
     // Check if variable already exists

@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
     std::cout << "RIS Compiler v0.1.0" << std::endl;
     
     std::string input_file;
-    std::string output_file = "output.ll";
+    std::string output_file = "output";
     bool compile_executable = false;
     bool auto_run = false;
     

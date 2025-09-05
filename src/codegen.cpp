@@ -172,24 +172,52 @@ void CodeGenerator::generate_function(FuncDecl& func) {
 }
 
 void CodeGenerator::generate_variable_declaration(VarDecl& var, bool is_global) {
-    llvm::Type* var_type = get_llvm_type(var.type);
+    llvm::Type* var_type;
+    
+    // Handle array types
+    if (var.is_array) {
+        llvm::Type* element_type = get_llvm_type(var.type);
+        if (var.array_size == -1) {
+            // Dynamic array - not supported yet
+            error("Dynamic arrays not yet implemented");
+            return;
+        } else {
+            // Fixed-size array
+            var_type = llvm::ArrayType::get(element_type, var.array_size);
+        }
+    } else {
+        // Regular variable
+        var_type = get_llvm_type(var.type);
+    }
+    
     llvm::Value* initial_value = nullptr;
     
     // Generate initializer if present
     if (var.initializer) {
-        initial_value = generate_expression(*var.initializer);
+        if (var.is_array) {
+            // Array initialization not supported yet
+            error("Array initialization not yet implemented");
+            return;
+        } else {
+            initial_value = generate_expression(*var.initializer);
+        }
     } else {
         // Create default initial value
-        if (var.type == "int") {
-            initial_value = llvm::ConstantInt::get(var_type, 0);
-        } else if (var.type == "float") {
-            initial_value = llvm::ConstantFP::get(var_type, 0.0);
-        } else if (var.type == "bool") {
-            initial_value = llvm::ConstantInt::get(var_type, 0);
-        } else if (var.type == "char") {
-            initial_value = llvm::ConstantInt::get(var_type, 0);
-        } else if (var.type == "string") {
-            initial_value = llvm::ConstantPointerNull::get(llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0));
+        if (var.is_array) {
+            // Arrays are zero-initialized by default
+            initial_value = llvm::ConstantAggregateZero::get(var_type);
+        } else {
+            if (var.type == "int") {
+                initial_value = llvm::ConstantInt::get(var_type, 0);
+            } else if (var.type == "float") {
+                initial_value = llvm::ConstantFP::get(var_type, 0.0);
+            } else if (var.type == "bool") {
+                initial_value = llvm::ConstantInt::get(var_type, 0);
+            } else if (var.type == "char") {
+                initial_value = llvm::ConstantInt::get(var_type, 0);
+            } else if (var.type == "string") {
+                initial_value = llvm::ConstantPointerNull::get(llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0));
+            }
         }
     }
     
@@ -249,6 +277,10 @@ llvm::Value* CodeGenerator::generate_expression(Expr& expr) {
         return generate_unary_expression(*unary);
     } else if (auto* call = dynamic_cast<CallExpr*>(&expr)) {
         return generate_call_expression(*call);
+    } else if (auto* array_access = dynamic_cast<ArrayIndexExpr*>(&expr)) {
+        return generate_array_access_expression(*array_access);
+    } else if (auto* struct_access = dynamic_cast<StructAccessExpr*>(&expr)) {
+        return generate_struct_access_expression(*struct_access);
     }
     
     return nullptr;
@@ -289,7 +321,20 @@ llvm::Value* CodeGenerator::generate_identifier_expression(IdentifierExpr& expr)
     
     llvm::Value* var = it->second;
     
-    // Load the value from memory if it's an alloca or global variable
+    // Check if this is an array variable
+    llvm::Type* var_type = nullptr;
+    if (auto* alloca = llvm::dyn_cast<llvm::AllocaInst>(var)) {
+        var_type = alloca->getAllocatedType();
+    } else if (auto* global = llvm::dyn_cast<llvm::GlobalVariable>(var)) {
+        var_type = global->getValueType();
+    }
+    
+    // If it's an array type, return the pointer directly (don't load)
+    if (var_type && llvm::isa<llvm::ArrayType>(var_type)) {
+        return var;
+    }
+    
+    // For scalar variables, load the value from memory
     if (llvm::isa<llvm::AllocaInst>(var) || llvm::isa<llvm::GlobalVariable>(var)) {
         // Get the element type from the variable type
         llvm::Type* element_type = nullptr;
@@ -319,7 +364,7 @@ llvm::Value* CodeGenerator::generate_binary_expression(BinaryExpr& expr) {
     
     switch (expr.op) {
         case TokenType::ASSIGN: {
-            // Handle assignment: left must be an identifier
+            // Handle assignment: left must be an identifier or array access
             if (auto* identifier = dynamic_cast<IdentifierExpr*>(expr.left.get())) {
                 auto it = named_values_.find(identifier->name);
                 if (it == named_values_.end()) {
@@ -331,8 +376,11 @@ llvm::Value* CodeGenerator::generate_binary_expression(BinaryExpr& expr) {
                 // Store the right value into the variable
                 builder_->CreateStore(right, var);
                 return right; // Return the assigned value
+            } else if (auto* array_access = dynamic_cast<ArrayIndexExpr*>(expr.left.get())) {
+                // Handle array assignment
+                return generate_array_assignment(*array_access, right);
             } else {
-                error("Left side of assignment must be a variable");
+                error("Left side of assignment must be a variable or array access");
                 return nullptr;
             }
         }
@@ -448,9 +496,209 @@ llvm::Value* CodeGenerator::generate_call_expression(CallExpr& expr) {
 }
 
 llvm::Value* CodeGenerator::generate_array_access_expression(ArrayIndexExpr& expr) {
-    // Simplified implementation
-    error("Array access not yet implemented");
-    return nullptr;
+    if (!expr.array || !expr.index) {
+        error("Array access missing array or index");
+        return nullptr;
+    }
+    
+    // Generate array reference
+    llvm::Value* array_value = generate_expression(*expr.array);
+    if (!array_value) {
+        error("Failed to generate array reference");
+        return nullptr;
+    }
+    
+    // Generate index expression
+    llvm::Value* index_value = generate_expression(*expr.index);
+    if (!index_value) {
+        error("Failed to generate index expression");
+        return nullptr;
+    }
+    
+    // Convert index to i64 if needed
+    if (!index_value->getType()->isIntegerTy(64)) {
+        index_value = builder_->CreateIntCast(index_value, 
+            llvm::Type::getInt64Ty(*context_), true, "indexcast");
+    }
+    
+    // Get array type information
+    llvm::Type* array_type = nullptr;
+    if (llvm::isa<llvm::AllocaInst>(array_value)) {
+        array_type = llvm::dyn_cast<llvm::AllocaInst>(array_value)->getAllocatedType();
+    } else if (llvm::isa<llvm::GlobalVariable>(array_value)) {
+        array_type = llvm::dyn_cast<llvm::GlobalVariable>(array_value)->getValueType();
+    } else {
+        error("Array access on non-array variable");
+        return nullptr;
+    }
+    
+    // Check if it's an array type
+    if (!llvm::isa<llvm::ArrayType>(array_type)) {
+        error("Variable is not an array");
+        return nullptr;
+    }
+    
+    auto* array_llvm_type = llvm::dyn_cast<llvm::ArrayType>(array_type);
+    llvm::Type* element_type = array_llvm_type->getElementType();
+    uint64_t array_size = array_llvm_type->getNumElements();
+    
+    // Add bounds checking
+    llvm::Function* current_func = builder_->GetInsertBlock()->getParent();
+    llvm::BasicBlock* bounds_ok = llvm::BasicBlock::Create(*context_, "bounds_ok", current_func);
+    llvm::BasicBlock* bounds_fail = llvm::BasicBlock::Create(*context_, "bounds_fail", current_func);
+    
+    // Check if index >= 0
+    llvm::Value* index_ge_zero = builder_->CreateICmpSGE(index_value, 
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), 0), "index_ge_zero");
+    
+    // Check if index < array_size
+    llvm::Value* index_lt_size = builder_->CreateICmpSLT(index_value, 
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), array_size), "index_lt_size");
+    
+    // Combine both conditions
+    llvm::Value* bounds_ok_cond = builder_->CreateAnd(index_ge_zero, index_lt_size, "bounds_ok");
+    
+    builder_->CreateCondBr(bounds_ok_cond, bounds_ok, bounds_fail);
+    
+    // Bounds check failed - call runtime error function
+    builder_->SetInsertPoint(bounds_fail);
+    // Call ris_exit with error code
+    auto it = functions_.find("ris_exit");
+    if (it != functions_.end()) {
+        builder_->CreateCall(it->second, {llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 1)});
+    } else {
+        // Fallback: create function if not found
+        llvm::Function* exit_func = llvm::Function::Create(
+            llvm::FunctionType::get(llvm::Type::getVoidTy(*context_), 
+                                   {llvm::Type::getInt32Ty(*context_)}, false),
+            llvm::Function::ExternalLinkage, "ris_exit", module_.get());
+        builder_->CreateCall(exit_func, {llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 1)});
+    }
+    builder_->CreateUnreachable();
+    
+    // Bounds check passed - generate array access
+    builder_->SetInsertPoint(bounds_ok);
+    
+    // Generate GEP (GetElementPtr) for array access
+    std::vector<llvm::Value*> indices = {
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), 0), // First index (0 for array)
+        index_value  // Second index (element index)
+    };
+    
+    llvm::Value* element_ptr = builder_->CreateGEP(array_type, array_value, indices, "array_element_ptr");
+    
+    // Load the element value
+    return builder_->CreateLoad(element_type, element_ptr, "array_element");
+}
+
+llvm::Value* CodeGenerator::generate_array_assignment(ArrayIndexExpr& expr, llvm::Value* value) {
+    if (!expr.array || !expr.index) {
+        error("Array assignment missing array or index");
+        return nullptr;
+    }
+    
+    // Generate array reference
+    llvm::Value* array_value = generate_expression(*expr.array);
+    if (!array_value) {
+        error("Failed to generate array reference");
+        return nullptr;
+    }
+    
+    // Generate index expression
+    llvm::Value* index_value = generate_expression(*expr.index);
+    if (!index_value) {
+        error("Failed to generate index expression");
+        return nullptr;
+    }
+    
+    // Convert index to i64 if needed
+    if (!index_value->getType()->isIntegerTy(64)) {
+        index_value = builder_->CreateIntCast(index_value, 
+            llvm::Type::getInt64Ty(*context_), true, "indexcast");
+    }
+    
+    // Get array type information
+    llvm::Type* array_type = nullptr;
+    if (llvm::isa<llvm::AllocaInst>(array_value)) {
+        array_type = llvm::dyn_cast<llvm::AllocaInst>(array_value)->getAllocatedType();
+    } else if (llvm::isa<llvm::GlobalVariable>(array_value)) {
+        array_type = llvm::dyn_cast<llvm::GlobalVariable>(array_value)->getValueType();
+    } else {
+        error("Array assignment on non-array variable");
+        return nullptr;
+    }
+    
+    // Check if it's an array type
+    if (!llvm::isa<llvm::ArrayType>(array_type)) {
+        error("Variable is not an array");
+        return nullptr;
+    }
+    
+    auto* array_llvm_type = llvm::dyn_cast<llvm::ArrayType>(array_type);
+    llvm::Type* element_type = array_llvm_type->getElementType();
+    uint64_t array_size = array_llvm_type->getNumElements();
+    
+    // Add bounds checking
+    llvm::Function* current_func = builder_->GetInsertBlock()->getParent();
+    llvm::BasicBlock* bounds_ok = llvm::BasicBlock::Create(*context_, "bounds_ok", current_func);
+    llvm::BasicBlock* bounds_fail = llvm::BasicBlock::Create(*context_, "bounds_fail", current_func);
+    
+    // Check if index >= 0
+    llvm::Value* index_ge_zero = builder_->CreateICmpSGE(index_value, 
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), 0), "index_ge_zero");
+    
+    // Check if index < array_size
+    llvm::Value* index_lt_size = builder_->CreateICmpSLT(index_value, 
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), array_size), "index_lt_size");
+    
+    // Combine both conditions
+    llvm::Value* bounds_ok_cond = builder_->CreateAnd(index_ge_zero, index_lt_size, "bounds_ok");
+    
+    builder_->CreateCondBr(bounds_ok_cond, bounds_ok, bounds_fail);
+    
+    // Bounds check failed - call runtime error function
+    builder_->SetInsertPoint(bounds_fail);
+    // Call ris_exit with error code
+    auto it = functions_.find("ris_exit");
+    if (it != functions_.end()) {
+        builder_->CreateCall(it->second, {llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 1)});
+    } else {
+        // Fallback: create function if not found
+        llvm::Function* exit_func = llvm::Function::Create(
+            llvm::FunctionType::get(llvm::Type::getVoidTy(*context_), 
+                                   {llvm::Type::getInt32Ty(*context_)}, false),
+            llvm::Function::ExternalLinkage, "ris_exit", module_.get());
+        builder_->CreateCall(exit_func, {llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 1)});
+    }
+    builder_->CreateUnreachable();
+    
+    // Bounds check passed - generate array assignment
+    builder_->SetInsertPoint(bounds_ok);
+    
+    // Generate GEP (GetElementPtr) for array access
+    std::vector<llvm::Value*> indices = {
+        llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), 0), // First index (0 for array)
+        index_value  // Second index (element index)
+    };
+    
+    llvm::Value* element_ptr = builder_->CreateGEP(array_type, array_value, indices, "array_element_ptr");
+    
+    // Convert value to element type if needed
+    if (value->getType() != element_type) {
+        if (element_type->isIntegerTy() && value->getType()->isIntegerTy()) {
+            value = builder_->CreateIntCast(value, element_type, true, "valuecast");
+        } else if (element_type->isFloatingPointTy() && value->getType()->isFloatingPointTy()) {
+            value = builder_->CreateFPCast(value, element_type, "valuecast");
+        } else if (element_type->isIntegerTy() && value->getType()->isFloatingPointTy()) {
+            value = builder_->CreateFPToSI(value, element_type, "valuecast");
+        } else if (element_type->isFloatingPointTy() && value->getType()->isIntegerTy()) {
+            value = builder_->CreateSIToFP(value, element_type, "valuecast");
+        }
+    }
+    
+    // Store the value into the array element
+    builder_->CreateStore(value, element_ptr);
+    return value; // Return the assigned value
 }
 
 llvm::Value* CodeGenerator::generate_struct_access_expression(StructAccessExpr& expr) {

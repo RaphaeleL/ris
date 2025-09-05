@@ -62,6 +62,7 @@ private:
     llvm::Value* generate_unary_expression(UnaryExpr& expr);
     llvm::Value* generate_call_expression(CallExpr& expr);
     llvm::Value* generate_array_access_expression(ArrayIndexExpr& expr);
+    llvm::Value* generate_array_assignment(ArrayIndexExpr& expr, llvm::Value* value);
     llvm::Value* generate_struct_access_expression(StructAccessExpr& expr);
     
     // Control flow generation

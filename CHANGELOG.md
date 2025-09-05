@@ -1,5 +1,34 @@
 # Changelog
 
+## [T080] - 2024-12-19
+
+### Added
+- Complete array implementation with comprehensive testing
+- Array declarations with fixed-size support (e.g., `int arr[5]`)
+- Array access expressions with proper type checking (`arr[index]`)
+- Array assignment with type conversion support
+- Runtime bounds checking for array access (exits with error code on violation)
+- Support for all primitive types in arrays (int, float, bool, char)
+- Array initialization with zero-initialization by default
+- Enhanced semantic analysis for array types and array access expressions
+- Comprehensive array integration tests covering all use cases
+
+### Technical Details
+- LLVM IR generation for array declarations using `ArrayType`
+- Array access using `GetElementPtr` (GEP) instructions
+- Bounds checking with conditional branches and runtime error handling
+- Type system support for `ArrayType` with element type and size
+- Semantic analysis correctly handles array types and array access expressions
+- Array assignment with proper type conversion between element types
+- Zero-initialization of arrays using `ConstantAggregateZero`
+
+### Features
+- Arrays: declarations, access, assignment, bounds checking, type safety
+- Primitive types: int, float, bool, char arrays all working correctly
+- Integration tests: basic, float, bool, char, complex, bounds checking
+- All tests pass: 42/42 unit tests, 6/6 array integration tests
+- Bounds checking: runtime validation with proper error handling
+
 ## [T070] - 2024-12-19
 
 ### Added
