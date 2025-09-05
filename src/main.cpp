@@ -36,9 +36,8 @@ int main(int argc, char* argv[]) {
     
     if (input_file.empty()) {
         std::cout << "Usage: " << argv[0] << " <input.c> [-o <output>] [--run]" << std::endl;
-        std::cout << "  -o <output.ll>  : Generate LLVM IR file" << std::endl;
-        std::cout << "  -o <executable> : Generate executable (auto-compiles)" << std::endl;
-        std::cout << "  --run          : Auto-run executable after compilation" << std::endl;
+        std::cout << "  -o <output>   : Generate executable" << std::endl;
+        std::cout << "  --run         : Auto-run executable after compilation" << std::endl;
         return 1;
     }
     
@@ -107,28 +106,65 @@ int main(int argc, char* argv[]) {
     if (compile_executable) {
         std::cout << "Code generation completed! Compiling to executable..." << std::endl;
         
-        // Detect platform and build command
-        std::string compile_cmd;
+        // Detect platform and try multiple compilers
+        std::vector<std::string> compilers;
         std::string runtime_lib = "bin/libris_runtime.a";
+        std::string output_ext = "";
         
         #ifdef __APPLE__
-            // macOS - use clang++
-            compile_cmd = "clang++ -o " + output_file + " " + llvm_output + " " + runtime_lib;
+            // macOS - try clang++, clang, g++
+            compilers = {"clang++", "clang", "g++"};
         #elif _WIN32
-            // Windows - use clang++ or cl
-            compile_cmd = "clang++ -o " + output_file + ".exe " + llvm_output + " " + runtime_lib;
+            // Windows - try clang++, clang, g++, cl
+            compilers = {"clang++", "clang", "g++", "cl"};
+            output_ext = ".exe";
         #else
-            // Linux - use clang++ or g++
-            compile_cmd = "clang++ -o " + output_file + " " + llvm_output + " " + runtime_lib;
+            // Linux - try clang++, clang, g++
+            compilers = {"clang++", "clang", "g++"};
         #endif
         
-        std::cout << "Running: " << compile_cmd << std::endl;
+        std::string final_output = output_file + output_ext;
+        bool compilation_success = false;
         
-        // Execute compilation command
-        int result = std::system(compile_cmd.c_str());
+        for (const auto& compiler : compilers) {
+            std::string compile_cmd;
+            
+            if (compiler == "cl") {
+                // MSVC compiler
+                compile_cmd = "cl /Fe:" + final_output + " " + llvm_output + " " + runtime_lib + " /link";
+            } else {
+                // GCC/Clang family
+                compile_cmd = compiler + " -o " + final_output + " " + llvm_output + " " + runtime_lib;
+            }
+            
+            std::cout << "Trying: " << compile_cmd << std::endl;
+            
+            // Execute compilation command
+            int result = std::system(compile_cmd.c_str());
+            
+            if (result == 0) {
+                std::cout << "Compilation successful with " << compiler << std::endl;
+                compilation_success = true;
+                break;
+            } else {
+                std::cout << "Failed with " << compiler << " (exit code " << result << ")" << std::endl;
+            }
+        }
         
-        if (result != 0) {
-            std::cerr << "Compilation failed with exit code " << result << std::endl;
+        if (!compilation_success) {
+            std::cerr << "Compilation failed with all available compilers!" << std::endl;
+            std::cerr << "Tried: ";
+            for (size_t i = 0; i < compilers.size(); ++i) {
+                std::cerr << compilers[i];
+                if (i < compilers.size() - 1) std::cerr << ", ";
+            }
+            std::cerr << std::endl;
+            std::cerr << "Please install one of these compilers:" << std::endl;
+            std::cerr << "  - clang++ (recommended)" << std::endl;
+            std::cerr << "  - g++" << std::endl;
+            #ifdef _WIN32
+            std::cerr << "  - cl (Microsoft Visual C++)" << std::endl;
+            #endif
             // Clean up temp file
             std::remove(llvm_output.c_str());
             return 1;
@@ -144,13 +180,13 @@ int main(int argc, char* argv[]) {
             std::cout << "--- Output ---" << std::endl;
             
             // Run the executable
-            std::string run_cmd = "./" + output_file;
+            std::string run_cmd = "./" + final_output;
             int run_result = std::system(run_cmd.c_str());
             
             std::cout << "--- End Output ---" << std::endl;
             std::cout << "Executable exited with code: " << run_result << std::endl;
         } else {
-            std::cout << "Run with: ./" << output_file << std::endl;
+            std::cout << "Run with: ./" << final_output << std::endl;
         }
     } else {
         std::cout << "Code generation completed! Output written to " << output_file << std::endl;
