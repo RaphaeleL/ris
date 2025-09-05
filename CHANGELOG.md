@@ -1,5 +1,39 @@
 # Changelog
 
+## [T070] - 2024-12-19
+
+### Added
+- Complete function implementation with comprehensive testing
+- Function definitions with multiple parameters (int, float, bool, char, string, void)
+- Function calls with proper argument passing and return value handling
+- Local variable support within functions with proper scoping
+- Recursive function calls with proper stack management
+- Void functions with no return value
+- Complex function interactions and nested function calls
+- Enhanced if statement code generation for return statements
+- Comprehensive function integration tests covering all use cases
+
+### Technical Details
+- LLVM IR generation for function definitions and calls
+- Proper calling convention mapping to LLVM (C calling convention)
+- Local variable allocation and management with alloca instructions
+- Parameter passing through LLVM function arguments
+- Return value handling for all primitive types
+- Recursive function support with proper stack frame management
+- Smart if statement optimization (no merge block when both branches return)
+- Function call expression generation with argument evaluation
+
+### Acceptance Criteria Met
+- ✅ Function definitions and calls work correctly
+- ✅ Proper calling convention mapping to LLVM
+- ✅ Local variables and argument passing work correctly
+- ✅ Functions with multiple parameters work correctly
+- ✅ Recursion is allowed and works correctly
+- ✅ Void functions work correctly
+- ✅ All integration tests pass with correct output
+- ✅ All unit tests pass (42/42 test cases)
+- ✅ Complex function interactions work correctly
+
 ## [T060] - 2024-12-19
 
 ### Added

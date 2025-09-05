@@ -483,12 +483,48 @@ void CodeGenerator::generate_if_statement(IfStmt& stmt) {
     llvm::BasicBlock* then_block = llvm::BasicBlock::Create(*context_, "then", func);
     llvm::BasicBlock* else_block = stmt.else_branch ? 
         llvm::BasicBlock::Create(*context_, "else", func) : nullptr;
-    llvm::BasicBlock* merge_block = llvm::BasicBlock::Create(*context_, "ifcont", func);
+    llvm::BasicBlock* merge_block = nullptr;
     
     // Create conditional branch
     if (else_block) {
-        builder_->CreateCondBr(cond_value, then_block, else_block);
+        // Check if both branches return (no merge block needed)
+        // We need to check if the statements are return statements
+        bool then_returns = false;
+        bool else_returns = false;
+        
+        if (stmt.then_branch) {
+            if (auto* return_stmt = dynamic_cast<ReturnStmt*>(stmt.then_branch.get())) {
+                then_returns = true;
+            } else if (auto* block_stmt = dynamic_cast<BlockStmt*>(stmt.then_branch.get())) {
+                // Check if block contains only a return statement
+                if (block_stmt->statements.size() == 1) {
+                    then_returns = dynamic_cast<ReturnStmt*>(block_stmt->statements[0].get()) != nullptr;
+                }
+            }
+        }
+        
+        if (stmt.else_branch) {
+            if (auto* return_stmt = dynamic_cast<ReturnStmt*>(stmt.else_branch.get())) {
+                else_returns = true;
+            } else if (auto* block_stmt = dynamic_cast<BlockStmt*>(stmt.else_branch.get())) {
+                // Check if block contains only a return statement
+                if (block_stmt->statements.size() == 1) {
+                    else_returns = dynamic_cast<ReturnStmt*>(block_stmt->statements[0].get()) != nullptr;
+                }
+            }
+        }
+        
+        if (then_returns && else_returns) {
+            // Both branches return, no merge block needed
+            builder_->CreateCondBr(cond_value, then_block, else_block);
+        } else {
+            // Need merge block
+            merge_block = llvm::BasicBlock::Create(*context_, "ifcont", func);
+            builder_->CreateCondBr(cond_value, then_block, else_block);
+        }
     } else {
+        // For if without else, create merge block and branch to it
+        merge_block = llvm::BasicBlock::Create(*context_, "ifcont", func);
         builder_->CreateCondBr(cond_value, then_block, merge_block);
     }
     
@@ -497,7 +533,10 @@ void CodeGenerator::generate_if_statement(IfStmt& stmt) {
     if (stmt.then_branch) {
         generate_statement(*stmt.then_branch);
     }
-    builder_->CreateBr(merge_block);
+    // Only add branch if the block doesn't already have a terminator and merge block exists
+    if (!builder_->GetInsertBlock()->getTerminator() && merge_block) {
+        builder_->CreateBr(merge_block);
+    }
     
     // Generate else branch if it exists
     if (else_block) {
@@ -505,11 +544,16 @@ void CodeGenerator::generate_if_statement(IfStmt& stmt) {
         if (stmt.else_branch) {
             generate_statement(*stmt.else_branch);
         }
-        builder_->CreateBr(merge_block);
+        // Only add branch if the block doesn't already have a terminator and merge block exists
+        if (!builder_->GetInsertBlock()->getTerminator() && merge_block) {
+            builder_->CreateBr(merge_block);
+        }
     }
     
-    // Set insertion point to merge block
-    builder_->SetInsertPoint(merge_block);
+    // Set insertion point to merge block only if it exists
+    if (merge_block) {
+        builder_->SetInsertPoint(merge_block);
+    }
 }
 
 void CodeGenerator::generate_while_statement(WhileStmt& stmt) {
