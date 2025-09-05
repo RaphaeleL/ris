@@ -12,8 +12,8 @@ LLVM_LIBS     = $(shell $(LLVM_CONFIG) --libs core support)
 # Directories
 SRC_DIR     = src
 INCLUDE_DIR = include
-BUILD_DIR   = build
-BIN_DIR     = bin
+BUILD_DIR   = out/build
+BIN_DIR     = out/bin
 TEST_DIR    = tests
 
 # Source files
@@ -40,6 +40,8 @@ ECHO_CC = @printf " CC      %s\n" $<
 ECHO_LD = @printf " LD      %s\n" $@
 ECHO_MK = @printf " MKDIR   %s\n" $@
 ECHO_AR = @printf " AR      %s\n" $@
+ECHO_RM = @printf " RM      %s\n" $<
+ECHO_CP = @printf " CP      %s\n" $<
 
 # Default target
 all: $(TARGET)
@@ -61,7 +63,7 @@ $(RUNTIME_LIB): $(BUILD_DIR)/runtime.o | $(BIN_DIR)
 # Main compiler executable
 $(TARGET): $(OBJECTS) $(RUNTIME_LIB) | $(BIN_DIR)
 	$(ECHO_LD)
-	@$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS) -lc++
+	@$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS)
 
 # Object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS) | $(BUILD_DIR)
@@ -71,7 +73,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS) | $(BUILD_DIR)
 # Test executable
 $(TEST_TARGET): $(TEST_RUNNER_OBJ) $(TEST_OBJECTS) $(filter-out build/main.o, $(OBJECTS)) | $(BIN_DIR)
 	$(ECHO_LD)
-	@$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS) -lc++
+	@$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS)
 
 # Test object files
 $(BUILD_DIR)/%_test.o: $(TEST_DIR)/unit/%_test.cpp $(HEADERS) | $(BUILD_DIR)
@@ -111,11 +113,13 @@ test-integration: $(TARGET)
 
 # Clean build artifacts
 clean:
-	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	$(ECHO_RM) out
+	@rm -rf out
 
 # Install (optional)
 install: $(TARGET)
-	cp $(TARGET) /usr/local/bin/
+	$(ECHO_CP) $(TARGET) /usr/local/bin/
+	@cp $(TARGET) /usr/local/bin/
 
 # Help
 help:
