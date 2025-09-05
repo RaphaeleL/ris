@@ -1,0 +1,23 @@
+# Build artifacts
+build/
+bin/
+*.o
+*.ll
+*.s
+*.exe
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test outputs
+/tmp/test_*
+
+# Logs
+*.log

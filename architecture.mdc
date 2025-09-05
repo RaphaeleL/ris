@@ -1,0 +1,34 @@
+# Architecture: Full compiler (C subset, no pointers)
+
+1) Language subset (surface C-like syntax)
+- Types: `int` (64-bit), `float` (64-bit double), `bool` (1-byte), `char` (8-bit), fixed-length arrays (e.g., `int a[10];`), `string` (immutable, heap-backed).
+- No pointers, no pointer arithmetic, no address-of `&`, no dereference `*` operator.
+- Control: `if`, `else`, `while`, `for`, `break`, `continue`, `return`.
+- Functions: typed parameters, single return type (void allowed). No function pointers.
+- Structs: allowed (value semantics). No unions. Struct fields are value-copied.
+- No varargs (no `...` in functions) in MVP. Interop helpers to call `printf` from runtime.
+- Literals: integer (decimal/hex), float, char `'a'`, string literal "...".
+- Operators: arithmetic `+ - * / %`, bitwise ops optional for MVP, comparisons `< > == != <= >=`, logical `&& || !`.
+
+2) Frontend
+- Lexer: deterministic state machine producing tokens with source positions.
+- Parser: recursive-descent parser producing a typed AST. Grammar kept LL(1)-ish; use precedence climbing for expressions.
+- AST: strongly typed nodes with source spans. Nodes: `Program`, `FuncDecl`, `VarDecl`, `BlockStmt`, `IfStmt`, `WhileStmt`, `ForStmt`, `ReturnStmt`, `ExprStmt`, `BinaryExpr`, `UnaryExpr`, `CallExpr`, `ArrayIndexExpr`, `StructAccessExpr`.
+- Semantic analysis: symbol table per scope, function table, type inference for expressions (no generics). Type checking enforces: no pointer types, array bounds for compile-time fixed-size arrays, function signature checking, implicit conversions only where safe (e.g., `int` -> `float` allowed, float->int requires explicit cast), forbidden implicit narrowing.
+
+3) Intermediate representation
+- Emit LLVM IR as the canonical backend interface. Map language types to LLVM types:
+- `int` -> `i64`
+- `float` -> `double`
+- `bool` -> `i1` (promoted to `i8` or `i32` where necessary during calls)
+- `char` -> `i8`
+- `string` -> `%struct.string*` (opaque struct pointing to heap data and length)
+- `array` -> inline aggregate for fixed-size known at compile time or heap-allocated buffer with runtime length field for dynamic arrays.
+- Calling convention: platform-default C calling convention for interoperability with `printf` and system libraries.
+- Memory model: stack-allocated locals, heap-allocated strings/boxed arrays via runtime allocator. No user-level pointer arithmetic.
+
+4) Code generation strategy
+- Two-stage: frontend -> typed AST -> lowering -> LLVM IR generator.
+- Lowering handles: struct layout, array bounds checks (optional runtime trap), boxing/unboxing for heap-allocated values.
+- LLVM IR generation: use LLVM C++ API to emit IR, then use `llc` to compile to native code.
+- Runtime linking: link with minimal runtime library for memory management and I/O.
