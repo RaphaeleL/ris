@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <cstdlib>
+#include <filesystem>
 #include "lexer.h"
 #include "parser.h"
 #include "semantic_analyzer.h"
@@ -10,20 +12,34 @@
 int main(int argc, char* argv[]) {
     std::cout << "RIS Compiler v0.1.0" << std::endl;
     
-    if (argc < 2) {
-        std::cout << "Usage: " << argv[0] << " <input.c> [-o <output.ll>]" << std::endl;
-        return 1;
-    }
-    
-    std::string input_file = argv[1];
+    std::string input_file;
     std::string output_file = "output.ll";
+    bool compile_executable = false;
+    bool auto_run = false;
     
     // Parse command line arguments
-    for (int i = 2; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
         if (std::string(argv[i]) == "-o" && i + 1 < argc) {
             output_file = argv[i + 1];
+            // Check if output file doesn't have .ll extension (executable)
+            if (output_file.find(".ll") == std::string::npos) {
+                compile_executable = true;
+            }
             i++; // Skip the next argument
+        } else if (std::string(argv[i]) == "--run") {
+            auto_run = true;
+        } else if (input_file.empty() && std::string(argv[i]) != "-o" && std::string(argv[i]) != "--run") {
+            // First non-flag argument is the input file
+            input_file = argv[i];
         }
+    }
+    
+    if (input_file.empty()) {
+        std::cout << "Usage: " << argv[0] << " <input.c> [-o <output>] [--run]" << std::endl;
+        std::cout << "  -o <output.ll>  : Generate LLVM IR file" << std::endl;
+        std::cout << "  -o <executable> : Generate executable (auto-compiles)" << std::endl;
+        std::cout << "  --run          : Auto-run executable after compilation" << std::endl;
+        return 1;
     }
     
     std::cout << "Input file: " << input_file << std::endl;
@@ -79,15 +95,66 @@ int main(int argc, char* argv[]) {
     std::cout << "Semantic analysis passed!" << std::endl;
 
     // Generate LLVM IR
+    std::string llvm_output = compile_executable ? "temp_output.ll" : output_file;
     ris::CodeGenerator codegen;
-    bool codegen_ok = codegen.generate(std::move(program), "output.ll");
+    bool codegen_ok = codegen.generate(std::move(program), llvm_output);
     
     if (!codegen_ok) {
         std::cerr << "Code generation failed: " << codegen.error_message() << std::endl;
         return 1;
     }
     
-    std::cout << "Code generation completed! Output written to output.ll" << std::endl;
+    if (compile_executable) {
+        std::cout << "Code generation completed! Compiling to executable..." << std::endl;
+        
+        // Detect platform and build command
+        std::string compile_cmd;
+        std::string runtime_lib = "bin/libris_runtime.a";
+        
+        #ifdef __APPLE__
+            // macOS - use clang++
+            compile_cmd = "clang++ -o " + output_file + " " + llvm_output + " " + runtime_lib;
+        #elif _WIN32
+            // Windows - use clang++ or cl
+            compile_cmd = "clang++ -o " + output_file + ".exe " + llvm_output + " " + runtime_lib;
+        #else
+            // Linux - use clang++ or g++
+            compile_cmd = "clang++ -o " + output_file + " " + llvm_output + " " + runtime_lib;
+        #endif
+        
+        std::cout << "Running: " << compile_cmd << std::endl;
+        
+        // Execute compilation command
+        int result = std::system(compile_cmd.c_str());
+        
+        if (result != 0) {
+            std::cerr << "Compilation failed with exit code " << result << std::endl;
+            // Clean up temp file
+            std::remove(llvm_output.c_str());
+            return 1;
+        }
+        
+        // Clean up temporary LLVM IR file
+        std::remove(llvm_output.c_str());
+        
+        std::cout << "Executable created: " << output_file << std::endl;
+        
+        if (auto_run) {
+            std::cout << "Auto-running executable..." << std::endl;
+            std::cout << "--- Output ---" << std::endl;
+            
+            // Run the executable
+            std::string run_cmd = "./" + output_file;
+            int run_result = std::system(run_cmd.c_str());
+            
+            std::cout << "--- End Output ---" << std::endl;
+            std::cout << "Executable exited with code: " << run_result << std::endl;
+        } else {
+            std::cout << "Run with: ./" << output_file << std::endl;
+        }
+    } else {
+        std::cout << "Code generation completed! Output written to " << output_file << std::endl;
+    }
 
     return 0;
 }

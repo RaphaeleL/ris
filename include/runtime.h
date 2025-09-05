@@ -38,3 +38,4 @@ void ris_array_free(void* ptr);
 void ris_exit(int32_t code);
 
 } // extern "C"
+

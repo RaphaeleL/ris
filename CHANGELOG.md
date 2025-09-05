@@ -1,5 +1,37 @@
 # Changelog
 
+## [T060] - 2024-12-19
+
+### Added
+- Complete control flow statement implementation in code generator
+- If/else statement code generation with proper basic block management
+- While loop code generation with condition and body blocks
+- For loop code generation with initialization, condition, update, and body blocks
+- Return statement code generation with proper value handling
+- Assignment operator support in binary expression generation
+- Variable loading from memory (alloca and global variables)
+- Comprehensive integration tests for all control flow statements
+- Support for comparison operators (>, <, >=, <=, ==, !=)
+- Support for logical operators (&&, ||)
+
+### Technical Details
+- LLVM IR generation for all control flow constructs
+- Proper basic block creation and branching
+- Variable memory management with load/store operations
+- Type-safe assignment operations
+- Boolean condition conversion for control flow
+- Integration with existing semantic analyzer and parser
+
+### Acceptance Criteria Met
+- ✅ If/else statements generate correct LLVM IR and execute properly
+- ✅ While loops generate correct LLVM IR and execute properly
+- ✅ For loops generate correct LLVM IR and execute properly
+- ✅ Return statements work correctly for both void and value returns
+- ✅ Assignment operations work correctly for all variable types
+- ✅ All integration tests pass with correct output
+- ✅ All unit tests pass (42/42 test cases)
+- ✅ Complex control flow combinations work correctly
+
 ## [T050] - 2024-12-19
 
 ### Added

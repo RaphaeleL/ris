@@ -26,11 +26,11 @@ Core MVP (minimum viable compiler)
 - Acceptance: `compile test.c` produces an `.ll` file that `llc`/`clang` can turn into a runnable executable that produces correct output for integration tests.
 - Tests: compile-run tests in `tests/integration/`.
 
-6. T050 - Runtime and standard library (minimal) — TODO
+6. T050 - Runtime and standard library (minimal) — DONE
 - Deliverables: runtime support for `main`, stack/heap model (no raw pointers exposed to language), basic I/O: `print`/`println` and `%d`-style formatting or `printf` wrapper.
 - Acceptance: sample programs that use IO and dynamic allocation run correctly.
 
-7. T060 - Control flow: if/else, while, for, return — TODO
+7. T060 - Control flow: if/else, while, for, return — DONE
 - Deliverables: AST+codegen+tests for conditionals and loops.
 - Acceptance: integration tests for each structure.
 

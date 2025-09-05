@@ -223,6 +223,8 @@ void CodeGenerator::generate_statement(Stmt& stmt) {
         generate_for_statement(*for_stmt);
     } else if (auto* return_stmt = dynamic_cast<ReturnStmt*>(&stmt)) {
         generate_return_statement(*return_stmt);
+    } else if (auto* var_decl = dynamic_cast<VarDecl*>(&stmt)) {
+        generate_variable_declaration(*var_decl, false);
     } else if (auto* expr_stmt = dynamic_cast<ExprStmt*>(&stmt)) {
         if (expr_stmt->expression) {
             generate_expression(*expr_stmt->expression);
@@ -287,8 +289,19 @@ llvm::Value* CodeGenerator::generate_identifier_expression(IdentifierExpr& expr)
     
     llvm::Value* var = it->second;
     
-    // For simplicity, just return the variable for now
-    // In a full implementation, we'd need to handle loading from allocas/globals
+    // Load the value from memory if it's an alloca or global variable
+    if (llvm::isa<llvm::AllocaInst>(var) || llvm::isa<llvm::GlobalVariable>(var)) {
+        // Get the element type from the variable type
+        llvm::Type* element_type = nullptr;
+        if (auto* alloca = llvm::dyn_cast<llvm::AllocaInst>(var)) {
+            element_type = alloca->getAllocatedType();
+        } else if (auto* global = llvm::dyn_cast<llvm::GlobalVariable>(var)) {
+            element_type = global->getValueType();
+        }
+        return builder_->CreateLoad(element_type, var, expr.name);
+    }
+    
+    // For function parameters, return the value directly
     return var;
 }
 
@@ -305,6 +318,24 @@ llvm::Value* CodeGenerator::generate_binary_expression(BinaryExpr& expr) {
     }
     
     switch (expr.op) {
+        case TokenType::ASSIGN: {
+            // Handle assignment: left must be an identifier
+            if (auto* identifier = dynamic_cast<IdentifierExpr*>(expr.left.get())) {
+                auto it = named_values_.find(identifier->name);
+                if (it == named_values_.end()) {
+                    error("Undefined variable: " + identifier->name);
+                    return nullptr;
+                }
+                
+                llvm::Value* var = it->second;
+                // Store the right value into the variable
+                builder_->CreateStore(right, var);
+                return right; // Return the assigned value
+            } else {
+                error("Left side of assignment must be a variable");
+                return nullptr;
+            }
+        }
         case TokenType::PLUS:
             if (left->getType()->isFloatingPointTy()) {
                 return builder_->CreateFAdd(left, right, "addtmp");
@@ -335,6 +366,40 @@ llvm::Value* CodeGenerator::generate_binary_expression(BinaryExpr& expr) {
             } else {
                 return builder_->CreateICmpEQ(left, right, "eqtmp");
             }
+        case TokenType::GREATER:
+            if (left->getType()->isFloatingPointTy()) {
+                return builder_->CreateFCmpOGT(left, right, "gttmp");
+            } else {
+                return builder_->CreateICmpSGT(left, right, "gttmp");
+            }
+        case TokenType::LESS:
+            if (left->getType()->isFloatingPointTy()) {
+                return builder_->CreateFCmpOLT(left, right, "lttmp");
+            } else {
+                return builder_->CreateICmpSLT(left, right, "lttmp");
+            }
+        case TokenType::GREATER_EQUAL:
+            if (left->getType()->isFloatingPointTy()) {
+                return builder_->CreateFCmpOGE(left, right, "getmp");
+            } else {
+                return builder_->CreateICmpSGE(left, right, "getmp");
+            }
+        case TokenType::LESS_EQUAL:
+            if (left->getType()->isFloatingPointTy()) {
+                return builder_->CreateFCmpOLE(left, right, "letmp");
+            } else {
+                return builder_->CreateICmpSLE(left, right, "letmp");
+            }
+        case TokenType::NOT_EQUAL:
+            if (left->getType()->isFloatingPointTy()) {
+                return builder_->CreateFCmpONE(left, right, "netmp");
+            } else {
+                return builder_->CreateICmpNE(left, right, "netmp");
+            }
+        case TokenType::AND:
+            return builder_->CreateAnd(left, right, "andtmp");
+        case TokenType::OR:
+            return builder_->CreateOr(left, right, "ortmp");
         default:
             return nullptr;
     }
@@ -395,23 +460,168 @@ llvm::Value* CodeGenerator::generate_struct_access_expression(StructAccessExpr& 
 }
 
 void CodeGenerator::generate_if_statement(IfStmt& stmt) {
-    // Simplified implementation
-    error("If statements not yet implemented");
+    if (!stmt.condition) {
+        error("If statement missing condition");
+        return;
+    }
+    
+    // Generate condition
+    llvm::Value* cond_value = generate_expression(*stmt.condition);
+    if (!cond_value) {
+        error("Failed to generate if condition");
+        return;
+    }
+    
+    // Convert condition to boolean if needed
+    if (!cond_value->getType()->isIntegerTy(1)) {
+        cond_value = builder_->CreateICmpNE(cond_value, 
+            llvm::ConstantInt::get(cond_value->getType(), 0), "ifcond");
+    }
+    
+    // Get current function and create basic blocks
+    llvm::Function* func = builder_->GetInsertBlock()->getParent();
+    llvm::BasicBlock* then_block = llvm::BasicBlock::Create(*context_, "then", func);
+    llvm::BasicBlock* else_block = stmt.else_branch ? 
+        llvm::BasicBlock::Create(*context_, "else", func) : nullptr;
+    llvm::BasicBlock* merge_block = llvm::BasicBlock::Create(*context_, "ifcont", func);
+    
+    // Create conditional branch
+    if (else_block) {
+        builder_->CreateCondBr(cond_value, then_block, else_block);
+    } else {
+        builder_->CreateCondBr(cond_value, then_block, merge_block);
+    }
+    
+    // Generate then branch
+    builder_->SetInsertPoint(then_block);
+    if (stmt.then_branch) {
+        generate_statement(*stmt.then_branch);
+    }
+    builder_->CreateBr(merge_block);
+    
+    // Generate else branch if it exists
+    if (else_block) {
+        builder_->SetInsertPoint(else_block);
+        if (stmt.else_branch) {
+            generate_statement(*stmt.else_branch);
+        }
+        builder_->CreateBr(merge_block);
+    }
+    
+    // Set insertion point to merge block
+    builder_->SetInsertPoint(merge_block);
 }
 
 void CodeGenerator::generate_while_statement(WhileStmt& stmt) {
-    // Simplified implementation
-    error("While statements not yet implemented");
+    if (!stmt.condition) {
+        error("While statement missing condition");
+        return;
+    }
+    
+    // Get current function and create basic blocks
+    llvm::Function* func = builder_->GetInsertBlock()->getParent();
+    llvm::BasicBlock* cond_block = llvm::BasicBlock::Create(*context_, "while.cond", func);
+    llvm::BasicBlock* body_block = llvm::BasicBlock::Create(*context_, "while.body", func);
+    llvm::BasicBlock* end_block = llvm::BasicBlock::Create(*context_, "while.end", func);
+    
+    // Branch to condition block
+    builder_->CreateBr(cond_block);
+    
+    // Generate condition block
+    builder_->SetInsertPoint(cond_block);
+    llvm::Value* cond_value = generate_expression(*stmt.condition);
+    if (!cond_value) {
+        error("Failed to generate while condition");
+        return;
+    }
+    
+    // Convert condition to boolean if needed
+    if (!cond_value->getType()->isIntegerTy(1)) {
+        cond_value = builder_->CreateICmpNE(cond_value, 
+            llvm::ConstantInt::get(cond_value->getType(), 0), "whilecond");
+    }
+    
+    // Create conditional branch
+    builder_->CreateCondBr(cond_value, body_block, end_block);
+    
+    // Generate body block
+    builder_->SetInsertPoint(body_block);
+    if (stmt.body) {
+        generate_statement(*stmt.body);
+    }
+    // Branch back to condition
+    builder_->CreateBr(cond_block);
+    
+    // Set insertion point to end block
+    builder_->SetInsertPoint(end_block);
 }
 
 void CodeGenerator::generate_for_statement(ForStmt& stmt) {
-    // Simplified implementation
-    error("For statements not yet implemented");
+    // Get current function and create basic blocks
+    llvm::Function* func = builder_->GetInsertBlock()->getParent();
+    llvm::BasicBlock* init_block = llvm::BasicBlock::Create(*context_, "for.init", func);
+    llvm::BasicBlock* cond_block = llvm::BasicBlock::Create(*context_, "for.cond", func);
+    llvm::BasicBlock* body_block = llvm::BasicBlock::Create(*context_, "for.body", func);
+    llvm::BasicBlock* update_block = llvm::BasicBlock::Create(*context_, "for.update", func);
+    llvm::BasicBlock* end_block = llvm::BasicBlock::Create(*context_, "for.end", func);
+    
+    // Generate initialization
+    builder_->CreateBr(init_block);
+    builder_->SetInsertPoint(init_block);
+    if (stmt.init) {
+        generate_statement(*stmt.init);
+    }
+    builder_->CreateBr(cond_block);
+    
+    // Generate condition block
+    builder_->SetInsertPoint(cond_block);
+    if (stmt.condition) {
+        llvm::Value* cond_value = generate_expression(*stmt.condition);
+        if (!cond_value) {
+            error("Failed to generate for condition");
+            return;
+        }
+        
+        // Convert condition to boolean if needed
+        if (!cond_value->getType()->isIntegerTy(1)) {
+            cond_value = builder_->CreateICmpNE(cond_value, 
+                llvm::ConstantInt::get(cond_value->getType(), 0), "forcond");
+        }
+        
+        // Create conditional branch
+        builder_->CreateCondBr(cond_value, body_block, end_block);
+    } else {
+        // No condition means infinite loop, branch to body
+        builder_->CreateBr(body_block);
+    }
+    
+    // Generate body block
+    builder_->SetInsertPoint(body_block);
+    if (stmt.body) {
+        generate_statement(*stmt.body);
+    }
+    // Branch to update block
+    builder_->CreateBr(update_block);
+    
+    // Generate update block
+    builder_->SetInsertPoint(update_block);
+    if (stmt.update) {
+        generate_expression(*stmt.update);
+    }
+    // Branch back to condition
+    builder_->CreateBr(cond_block);
+    
+    // Set insertion point to end block
+    builder_->SetInsertPoint(end_block);
 }
 
 void CodeGenerator::generate_return_statement(ReturnStmt& stmt) {
     if (stmt.value) {
         llvm::Value* ret_value = generate_expression(*stmt.value);
+        if (!ret_value) {
+            error("Failed to generate return value");
+            return;
+        }
         builder_->CreateRet(ret_value);
     } else {
         builder_->CreateRetVoid();
