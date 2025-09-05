@@ -73,6 +73,7 @@ private:
     // Utility methods
     llvm::Value* create_constant(const std::string& value, const std::string& type);
     void create_main_function();
+    void declare_runtime_functions();
 };
 
 } // namespace ris

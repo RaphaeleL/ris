@@ -131,8 +131,8 @@ int test_codegen_boolean_literals() {
     std::string output_file;
     
     ASSERT_TRUE(compile_code(code, output_file));
-    ASSERT_TRUE(check_file_contains(output_file, "define i1 @main()"));
-    ASSERT_TRUE(check_file_contains(output_file, "ret i1 true"));
+    ASSERT_TRUE(check_file_contains(output_file, "define i8 @main()"));
+    ASSERT_TRUE(check_file_contains(output_file, "ret i8 1"));
     
     std::cout << "✓ test_codegen_boolean_literals passed" << std::endl;
     return 0;

@@ -65,6 +65,7 @@ private:
     std::string get_type_name_from_token(TokenType type);
     bool is_type_keyword(TokenType type);
     std::unique_ptr<Type> create_type_from_token(TokenType type);
+    void add_runtime_functions();
 };
 
 } // namespace ris

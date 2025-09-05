@@ -1,4 +1,5 @@
 #include "codegen.h"
+#include "runtime.h"
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/FileSystem.h>
 #include <llvm/Support/raw_ostream.h>
@@ -63,7 +64,7 @@ llvm::Type* CodeGenerator::get_llvm_type(const Type& type) {
             case PrimitiveType::Kind::FLOAT:
                 return llvm::Type::getDoubleTy(*context_);
             case PrimitiveType::Kind::BOOL:
-                return llvm::Type::getInt1Ty(*context_);
+                return llvm::Type::getInt8Ty(*context_);
             case PrimitiveType::Kind::CHAR:
                 return llvm::Type::getInt8Ty(*context_);
             case PrimitiveType::Kind::STRING:
@@ -88,7 +89,7 @@ llvm::Type* CodeGenerator::get_llvm_type(const std::string& type_name) {
     } else if (type_name == "float") {
         return llvm::Type::getDoubleTy(*context_);
     } else if (type_name == "bool") {
-        return llvm::Type::getInt1Ty(*context_);
+        return llvm::Type::getInt8Ty(*context_);
     } else if (type_name == "char") {
         return llvm::Type::getInt8Ty(*context_);
     } else if (type_name == "string") {
@@ -102,6 +103,9 @@ llvm::Type* CodeGenerator::get_llvm_type(const std::string& type_name) {
 }
 
 void CodeGenerator::generate_program(Program& program) {
+    // Declare runtime functions
+    declare_runtime_functions();
+    
     // Generate global variables
     for (auto& global : program.globals) {
         generate_variable_declaration(*global, true);
@@ -266,9 +270,9 @@ llvm::Value* CodeGenerator::generate_literal_expression(LiteralExpr& expr) {
             return builder_->CreateGlobalString(expr.value);
         }
         case TokenType::TRUE:
-            return llvm::ConstantInt::get(llvm::Type::getInt1Ty(*context_), 1);
+            return llvm::ConstantInt::get(llvm::Type::getInt8Ty(*context_), 1);
         case TokenType::FALSE:
-            return llvm::ConstantInt::get(llvm::Type::getInt1Ty(*context_), 0);
+            return llvm::ConstantInt::get(llvm::Type::getInt8Ty(*context_), 0);
         default:
             return nullptr;
     }
@@ -436,6 +440,143 @@ void CodeGenerator::create_main_function() {
     builder_->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 0));
     
     functions_["main"] = main_func;
+}
+
+void CodeGenerator::declare_runtime_functions() {
+    // Declare print functions
+    auto void_type = llvm::Type::getVoidTy(*context_);
+    auto int64_type = llvm::Type::getInt64Ty(*context_);
+    auto int8_type = llvm::Type::getInt8Ty(*context_);
+    auto double_type = llvm::Type::getDoubleTy(*context_);
+    auto string_type = llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0);
+    auto size_t_type = llvm::Type::getInt64Ty(*context_);
+    auto int32_type = llvm::Type::getInt32Ty(*context_);
+    
+    // ris_print_int
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {int64_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_print_int", module_.get());
+        functions_["ris_print_int"] = func;
+    }
+    
+    // ris_print_float
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {double_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_print_float", module_.get());
+        functions_["ris_print_float"] = func;
+    }
+    
+    // ris_print_bool
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {int8_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_print_bool", module_.get());
+        functions_["ris_print_bool"] = func;
+    }
+    
+    // ris_print_char
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {int8_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_print_char", module_.get());
+        functions_["ris_print_char"] = func;
+    }
+    
+    // ris_print_string
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {string_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_print_string", module_.get());
+        functions_["ris_print_string"] = func;
+    }
+    
+    // ris_println_int
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {int64_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println_int", module_.get());
+        functions_["ris_println_int"] = func;
+    }
+    
+    // ris_println_float
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {double_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println_float", module_.get());
+        functions_["ris_println_float"] = func;
+    }
+    
+    // ris_println_bool
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {int8_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println_bool", module_.get());
+        functions_["ris_println_bool"] = func;
+    }
+    
+    // ris_println_char
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {int8_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println_char", module_.get());
+        functions_["ris_println_char"] = func;
+    }
+    
+    // ris_println_string
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {string_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println_string", module_.get());
+        functions_["ris_println_string"] = func;
+    }
+    
+    // ris_println
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println", module_.get());
+        functions_["ris_println"] = func;
+    }
+    
+    // ris_malloc
+    {
+        auto func_type = llvm::FunctionType::get(llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0), {size_t_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_malloc", module_.get());
+        functions_["ris_malloc"] = func;
+    }
+    
+    // ris_free
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0)}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_free", module_.get());
+        functions_["ris_free"] = func;
+    }
+    
+    // ris_string_concat
+    {
+        auto func_type = llvm::FunctionType::get(string_type, {string_type, string_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_string_concat", module_.get());
+        functions_["ris_string_concat"] = func;
+    }
+    
+    // ris_string_length
+    {
+        auto func_type = llvm::FunctionType::get(size_t_type, {string_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_string_length", module_.get());
+        functions_["ris_string_length"] = func;
+    }
+    
+    // ris_array_alloc
+    {
+        auto func_type = llvm::FunctionType::get(llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0), {size_t_type, size_t_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_array_alloc", module_.get());
+        functions_["ris_array_alloc"] = func;
+    }
+    
+    // ris_array_free
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {llvm::PointerType::get(llvm::Type::getInt8Ty(*context_), 0)}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_array_free", module_.get());
+        functions_["ris_array_free"] = func;
+    }
+    
+    // ris_exit
+    {
+        auto func_type = llvm::FunctionType::get(void_type, {int32_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_exit", module_.get());
+        functions_["ris_exit"] = func;
+    }
 }
 
 } // namespace ris

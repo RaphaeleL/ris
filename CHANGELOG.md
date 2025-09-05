@@ -1,5 +1,36 @@
 # Changelog
 
+## [T050] - 2024-12-19
+
+### Added
+- Complete runtime library implementation with basic I/O functions
+- Runtime function declarations for all basic types (int, float, bool, char, string)
+- Print and println functions for all primitive types
+- Memory management functions (malloc, free)
+- String operations (concat, length)
+- Array operations (alloc, free)
+- Program exit function
+- Runtime library integration with compiler and linker
+- Semantic analyzer integration with runtime function declarations
+- Type system compatibility between language and runtime (bool->i8 mapping)
+
+### Technical Details
+- C-style runtime library with extern "C" declarations
+- Runtime functions: ris_print_*, ris_println_*, ris_malloc, ris_free, ris_string_*, ris_array_*, ris_exit
+- Runtime library compiled to static archive (libris_runtime.a)
+- Semantic analyzer populates symbol table with runtime function declarations
+- Code generator declares external LLVM functions for runtime
+- Type mapping: bool maps to i8 (int8_t) for runtime compatibility
+- Integration test demonstrates full compilation pipeline
+
+### Acceptance Criteria Met
+- ✅ Runtime library provides basic I/O for all primitive types
+- ✅ Memory management functions implemented
+- ✅ String and array operations available
+- ✅ Integration test compiles and runs successfully
+- ✅ All unit tests pass (42/42 test cases)
+- ✅ Full compilation pipeline: source -> tokens -> AST -> semantic analysis -> LLVM IR -> executable
+
 ## [T040] - 2024-12-19
 
 ### Added

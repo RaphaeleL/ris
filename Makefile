@@ -29,6 +29,7 @@ INTEGRATION_TESTS = $(wildcard $(TEST_DIR)/integration/*.c)
 # Main targets
 TARGET      = $(BIN_DIR)/risc
 TEST_TARGET = $(BIN_DIR)/risc_test
+RUNTIME_LIB = $(BIN_DIR)/libris_runtime.a
 
 # Test object files
 TEST_OBJECTS    = $(UNIT_TESTS:$(TEST_DIR)/unit/%_test.cpp=$(BUILD_DIR)/%_test.o)
@@ -38,6 +39,7 @@ TEST_RUNNER_OBJ = $(BUILD_DIR)/test_runner.o
 ECHO_CC = @printf " CC      %s\n" $<
 ECHO_LD = @printf " LD      %s\n" $@
 ECHO_MK = @printf " MKDIR   %s\n" $@
+ECHO_AR = @printf " AR      %s\n" $@
 
 # Default target
 all: $(TARGET)
@@ -51,8 +53,13 @@ $(BIN_DIR):
 	$(ECHO_MK) $@
 	@mkdir -p $@
 
+# Runtime library
+$(RUNTIME_LIB): $(BUILD_DIR)/runtime.o | $(BIN_DIR)
+	$(ECHO_AR)
+	@ar rcs $@ $^
+
 # Main compiler executable
-$(TARGET): $(OBJECTS) | $(BIN_DIR)
+$(TARGET): $(OBJECTS) $(RUNTIME_LIB) | $(BIN_DIR)
 	$(ECHO_LD)
 	@$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS) -lc++
 

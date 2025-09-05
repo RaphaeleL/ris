@@ -6,6 +6,8 @@ namespace ris {
 
 SemanticAnalyzer::SemanticAnalyzer() 
     : has_error_(false), error_message_("") {
+    // Add runtime functions to the global scope
+    add_runtime_functions();
 }
 
 bool SemanticAnalyzer::analyze(Program& program) {
@@ -566,6 +568,39 @@ std::unique_ptr<Type> SemanticAnalyzer::create_type_from_token(TokenType type) {
         error("Unknown type from token: " + type_name, SourcePos());
     }
     return result;
+}
+
+void SemanticAnalyzer::add_runtime_functions() {
+    // Helper function to add a function symbol
+    auto add_func = [this](const std::string& name, const std::string& return_type_name, const std::vector<std::string>& param_type_names) {
+        auto return_type = create_type(return_type_name);
+        std::vector<std::unique_ptr<Type>> param_types;
+        for (const auto& param_type_name : param_type_names) {
+            param_types.push_back(create_type(param_type_name));
+        }
+        auto func_symbol = std::make_unique<FunctionSymbol>(name, std::move(return_type), std::move(param_types), SourcePos());
+        symbol_table_.add_symbol(std::move(func_symbol));
+    };
+    
+    // Add all runtime functions
+    add_func("ris_print_int", "void", {"int"});
+    add_func("ris_print_float", "void", {"float"});
+    add_func("ris_print_bool", "void", {"bool"});
+    add_func("ris_print_char", "void", {"char"});
+    add_func("ris_print_string", "void", {"string"});
+    add_func("ris_println_int", "void", {"int"});
+    add_func("ris_println_float", "void", {"float"});
+    add_func("ris_println_bool", "void", {"bool"});
+    add_func("ris_println_char", "void", {"char"});
+    add_func("ris_println_string", "void", {"string"});
+    add_func("ris_println", "void", {});
+    add_func("ris_malloc", "string", {"int"});
+    add_func("ris_free", "void", {"string"});
+    add_func("ris_string_concat", "string", {"string", "string"});
+    add_func("ris_string_length", "int", {"string"});
+    add_func("ris_array_alloc", "string", {"int", "int"});
+    add_func("ris_array_free", "void", {"string"});
+    add_func("ris_exit", "void", {"int"});
 }
 
 } // namespace ris
