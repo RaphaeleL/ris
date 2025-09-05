@@ -10,6 +10,7 @@ bool Token::is_keyword() const {
         case TokenType::BOOL:
         case TokenType::CHAR:
         case TokenType::STRING:
+        case TokenType::VOID:
         case TokenType::IF:
         case TokenType::ELSE:
         case TokenType::WHILE:
@@ -90,6 +91,7 @@ TokenType keyword_to_token_type(const std::string& keyword) {
     if (keyword == "bool") return TokenType::BOOL;
     if (keyword == "char") return TokenType::CHAR;
     if (keyword == "string") return TokenType::STRING;
+    if (keyword == "void") return TokenType::VOID;
     if (keyword == "if") return TokenType::IF;
     if (keyword == "else") return TokenType::ELSE;
     if (keyword == "while") return TokenType::WHILE;
@@ -115,6 +117,7 @@ std::string token_type_to_string(TokenType type) {
         case TokenType::BOOL: return "BOOL";
         case TokenType::CHAR: return "CHAR";
         case TokenType::STRING: return "STRING";
+        case TokenType::VOID: return "VOID";
         case TokenType::IF: return "IF";
         case TokenType::ELSE: return "ELSE";
         case TokenType::WHILE: return "WHILE";

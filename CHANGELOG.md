@@ -1,5 +1,30 @@
 # Changelog
 
+## [T020] - 2024-12-19
+
+### Added
+- Complete parser implementation with recursive-descent parsing
+- AST node definitions for all language constructs
+- Support for functions, variables, control flow, and expressions
+- VOID type support for function return types
+- Comprehensive parser unit test suite with 14 test cases
+- Parser integration with main compiler
+
+### Technical Details
+- Recursive-descent parser with proper precedence handling
+- AST nodes for Program, FuncDecl, VarDecl, BlockStmt, IfStmt, WhileStmt, ForStmt, ReturnStmt, ExprStmt
+- Expression parsing with operator precedence (assignment, logical, equality, comparison, term, factor, unary)
+- Function call and array access expression support
+- Error handling with source position reporting
+- Parser takes tokens directly instead of lexer reference
+
+### Acceptance Criteria Met
+- ✅ All parser unit tests pass (14/14 test cases)
+- ✅ Parser correctly handles functions, variables, control flow
+- ✅ Expression parsing with proper precedence
+- ✅ Error handling and recovery
+- ✅ AST generation for all language constructs
+
 ## [T010] - 2024-12-19
 
 ### Added

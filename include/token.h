@@ -18,7 +18,7 @@ enum class TokenType {
     STRING_LITERAL,
     
     // Keywords
-    INT, FLOAT, BOOL, CHAR, STRING,
+    INT, FLOAT, BOOL, CHAR, STRING, VOID,
     IF, ELSE, WHILE, FOR, BREAK, CONTINUE, RETURN,
     TRUE, FALSE,
     

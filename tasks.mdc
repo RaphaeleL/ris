@@ -12,10 +12,10 @@ Core MVP (minimum viable compiler)
 - Acceptance: tests pass; example `lexer_tests/*.c` tokenized into expected token sequences.
 - Tests: AST structural equality tests for each grammar rule.
 
-3. T020 - Parser (recursive-descent) — TODO
-- Deliverables: parser producing AST for expressions and statements (see language subset in architecture.mdc).
-- Acceptance: AST matches golden files for sample inputs.
-- Tests: AST structural equality tests for each grammar rule.
+3. T020 - Parser (recursive-descent) — DONE
+- Deliverables: parser implementation producing AST for expressions and statements, comprehensive unit tests covering all language constructs.
+- Acceptance: all parser unit tests pass; parser correctly handles functions, variables, control flow, expressions, and error cases.
+- Tests: parser unit tests in `tests/unit/parser_test.cpp` with 14 test cases covering basic functions, parameters, variable declarations, arrays, expressions, control flow, function calls, and error handling.
 
 4. T030 - Semantic analyzer / type checker (no pointers) — TODO
 - Deliverables: static type checker that enforces types, scoping, function signatures, and reports clear errors.

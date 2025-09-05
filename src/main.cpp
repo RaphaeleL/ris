@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include "lexer.h"
+#include "parser.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "RIS Compiler v0.1.0" << std::endl;
@@ -46,14 +47,22 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    std::cout << "Tokenized " << tokens.size() << " tokens:" << std::endl;
-    for (const auto& token : tokens) {
-        if (token.type != ris::TokenType::EOF_TOKEN) {
-            std::cout << "  " << token.to_string() << std::endl;
-        }
+    std::cout << "Tokenized " << tokens.size() << " tokens" << std::endl;
+    
+    // Parse the tokens into AST
+    ris::Parser parser(tokens);
+    auto program = parser.parse();
+    
+    if (parser.has_error()) {
+        std::cerr << "Parser error: " << parser.error_message() << std::endl;
+        return 1;
     }
     
-    // TODO: Implement parser, semantic analysis, and code generation
+    std::cout << "Parsed successfully!" << std::endl;
+    std::cout << "Functions: " << program->functions.size() << std::endl;
+    std::cout << "Global variables: " << program->globals.size() << std::endl;
+    
+    // TODO: Implement semantic analysis and code generation
     
     return 0;
 }
