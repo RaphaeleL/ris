@@ -13,7 +13,7 @@ public:
     SemanticAnalyzer();
     
     // Main analysis method
-    bool analyze(std::unique_ptr<Program> program);
+    bool analyze(Program& program);
     
     // Check if there were any errors
     bool has_error() const { return has_error_; }

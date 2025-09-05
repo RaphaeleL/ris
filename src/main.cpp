@@ -5,6 +5,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "semantic_analyzer.h"
+#include "codegen.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "RIS Compiler v0.1.0" << std::endl;
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]) {
     
     // Perform semantic analysis
     ris::SemanticAnalyzer analyzer;
-    bool semantic_ok = analyzer.analyze(std::move(program));
+    bool semantic_ok = analyzer.analyze(*program);
     
     if (!semantic_ok) {
         std::cerr << "Semantic analysis failed:" << std::endl;
@@ -76,8 +77,17 @@ int main(int argc, char* argv[]) {
     }
     
     std::cout << "Semantic analysis passed!" << std::endl;
+
+    // Generate LLVM IR
+    ris::CodeGenerator codegen;
+    bool codegen_ok = codegen.generate(std::move(program), "output.ll");
     
-    // TODO: Implement code generation
+    if (!codegen_ok) {
+        std::cerr << "Code generation failed: " << codegen.error_message() << std::endl;
+        return 1;
+    }
     
+    std::cout << "Code generation completed! Output written to output.ll" << std::endl;
+
     return 0;
 }

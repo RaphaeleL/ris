@@ -38,6 +38,17 @@ int test_semantic_control_flow();
 int test_semantic_array_operations();
 int test_semantic_scope_handling();
 int test_semantic_implicit_conversions();
+
+// Code generator tests
+int test_codegen_basic_function();
+int test_codegen_void_function();
+int test_codegen_function_with_parameters();
+int test_codegen_global_variables();
+int test_codegen_arithmetic_expressions();
+int test_codegen_boolean_literals();
+int test_codegen_float_operations();
+int test_codegen_string_literals();
+int test_codegen_error_handling();
 int test_main_basic();
 
 int main() {
@@ -81,6 +92,17 @@ int main() {
     result += test_semantic_array_operations();
     result += test_semantic_scope_handling();
     result += test_semantic_implicit_conversions();
+    
+    // Code generator tests
+    result += test_codegen_basic_function();
+    result += test_codegen_void_function();
+    result += test_codegen_function_with_parameters();
+    result += test_codegen_global_variables();
+    result += test_codegen_arithmetic_expressions();
+    result += test_codegen_boolean_literals();
+    result += test_codegen_float_operations();
+    result += test_codegen_string_literals();
+    result += test_codegen_error_handling();
     
     if (result == 0) {
         std::cout << "All tests passed!" << std::endl;

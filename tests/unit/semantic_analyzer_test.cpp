@@ -54,7 +54,7 @@ int test_semantic_valid_program() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
@@ -75,7 +75,7 @@ int test_semantic_undefined_variable() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
@@ -96,7 +96,7 @@ int test_semantic_duplicate_variable() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
@@ -117,7 +117,7 @@ int test_semantic_type_mismatch() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
@@ -149,7 +149,7 @@ int test_semantic_arithmetic_operations() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
@@ -180,7 +180,7 @@ int test_semantic_boolean_operations() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
@@ -212,7 +212,7 @@ int test_semantic_comparison_operations() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
@@ -244,7 +244,7 @@ int test_semantic_function_calls() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
@@ -275,7 +275,7 @@ int test_semantic_wrong_argument_count() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
@@ -296,7 +296,7 @@ int test_semantic_undefined_function() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
@@ -337,7 +337,7 @@ int test_semantic_control_flow() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
@@ -366,7 +366,7 @@ int test_semantic_array_operations() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
@@ -398,7 +398,7 @@ int test_semantic_scope_handling() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
@@ -428,7 +428,7 @@ int test_semantic_implicit_conversions() {
     ASSERT_TRUE(program != nullptr);
     
     ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(std::move(program));
+    bool result = analyzer.analyze(*program);
     
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());

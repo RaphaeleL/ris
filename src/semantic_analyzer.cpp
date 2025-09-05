@@ -8,17 +8,12 @@ SemanticAnalyzer::SemanticAnalyzer()
     : has_error_(false), error_message_("") {
 }
 
-bool SemanticAnalyzer::analyze(std::unique_ptr<Program> program) {
+bool SemanticAnalyzer::analyze(Program& program) {
     has_error_ = false;
     error_message_ = "";
     errors_.clear();
     
-    if (!program) {
-        error("Program is null", SourcePos());
-        return false;
-    }
-    
-    analyze_program(*program);
+    analyze_program(program);
     
     return !has_error_;
 }

@@ -1,5 +1,36 @@
 # Changelog
 
+## [T040] - 2024-12-19
+
+### Added
+- Complete LLVM IR code generator implementation
+- Support for basic function code generation (int, float, bool, char, string, void)
+- Global variable code generation with initializers
+- Expression code generation (literals, identifiers, binary operations, unary operations)
+- Function call code generation
+- Return statement code generation
+- LLVM module verification and IR output to file
+- Comprehensive code generator unit test suite with 9 test cases
+- Integration with main compiler pipeline
+
+### Technical Details
+- LLVM IR backend using LLVM 21.1.0
+- Type mapping from language types to LLVM types (int->i64, float->double, bool->i1, char->i8, string->i8*, void->void)
+- Function generation with proper calling conventions
+- Global variable generation with proper linkage and initialization
+- Expression code generation with LLVM instruction builders
+- Basic block management for function bodies
+- Module verification to ensure valid LLVM IR
+- Error handling and reporting for code generation failures
+
+### Acceptance Criteria Met
+- ✅ All code generator unit tests pass (9/9 test cases)
+- ✅ Translation from AST to LLVM IR for expressions, functions, and simple types
+- ✅ Generated LLVM IR compiles with clang and produces correct executable output
+- ✅ Support for basic functions, global variables, and return statements
+- ✅ Proper type mapping and code generation
+- ✅ Integration tests: `int main() { return 42; }` compiles and returns exit code 42
+
 ## [T030] - 2024-12-19
 
 ### Added

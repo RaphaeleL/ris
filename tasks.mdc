@@ -21,7 +21,7 @@ Core MVP (minimum viable compiler)
 - Deliverables: static type checker that enforces types, scoping, function signatures, and reports clear errors.
 - Acceptance: semantic tests and negative tests (type errors) covering mismatches, missing identifiers, shadowing rules.
 
-5. T040 - AST -> LLVM IR backend (codegen basics) — TODO
+5. T040 - AST -> LLVM IR backend (codegen basics) — DONE
 - Deliverables: translation from AST to LLVM IR for expressions, functions, control flow, and simple types.
 - Acceptance: `compile test.c` produces an `.ll` file that `llc`/`clang` can turn into a runnable executable that produces correct output for integration tests.
 - Tests: compile-run tests in `tests/integration/`.
