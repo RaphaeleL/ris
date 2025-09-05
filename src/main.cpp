@@ -4,6 +4,7 @@
 #include <fstream>
 #include "lexer.h"
 #include "parser.h"
+#include "semantic_analyzer.h"
 
 int main(int argc, char* argv[]) {
     std::cout << "RIS Compiler v0.1.0" << std::endl;
@@ -62,7 +63,21 @@ int main(int argc, char* argv[]) {
     std::cout << "Functions: " << program->functions.size() << std::endl;
     std::cout << "Global variables: " << program->globals.size() << std::endl;
     
-    // TODO: Implement semantic analysis and code generation
+    // Perform semantic analysis
+    ris::SemanticAnalyzer analyzer;
+    bool semantic_ok = analyzer.analyze(std::move(program));
+    
+    if (!semantic_ok) {
+        std::cerr << "Semantic analysis failed:" << std::endl;
+        for (const auto& error : analyzer.errors()) {
+            std::cerr << "  " << error << std::endl;
+        }
+        return 1;
+    }
+    
+    std::cout << "Semantic analysis passed!" << std::endl;
+    
+    // TODO: Implement code generation
     
     return 0;
 }

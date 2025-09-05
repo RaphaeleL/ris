@@ -6,15 +6,15 @@ CXX = clang++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
 LLVM_CONFIG = llvm-config
 LLVM_CXXFLAGS = $(shell $(LLVM_CONFIG) --cxxflags)
-LLVM_LDFLAGS = $(shell $(LLVM_CONFIG) --ldflags)
-LLVM_LIBS = $(shell $(LLVM_CONFIG) --libs core support)
+LLVM_LDFLAGS  = $(shell $(LLVM_CONFIG) --ldflags)
+LLVM_LIBS     = $(shell $(LLVM_CONFIG) --libs core support)
 
 # Directories
-SRC_DIR = src
+SRC_DIR     = src
 INCLUDE_DIR = include
-BUILD_DIR = build
-BIN_DIR = bin
-TEST_DIR = tests
+BUILD_DIR   = build
+BIN_DIR     = bin
+TEST_DIR    = tests
 
 # Source files
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
@@ -22,47 +22,59 @@ OBJECTS = $(SOURCES:$(SRC_DIR)/%.cpp=$(BUILD_DIR)/%.o)
 HEADERS = $(wildcard $(INCLUDE_DIR)/*.h)
 
 # Test files
-UNIT_TESTS = $(wildcard $(TEST_DIR)/unit/*_test.cpp)
-TEST_RUNNER = $(TEST_DIR)/unit/test_runner.cpp
+UNIT_TESTS      = $(wildcard $(TEST_DIR)/unit/*_test.cpp)
+TEST_RUNNER     = $(TEST_DIR)/unit/test_runner.cpp
 INTEGRATION_TESTS = $(wildcard $(TEST_DIR)/integration/*.c)
 
 # Main targets
-TARGET = $(BIN_DIR)/risc
+TARGET      = $(BIN_DIR)/risc
 TEST_TARGET = $(BIN_DIR)/risc_test
 
 # Test object files
-TEST_OBJECTS = $(UNIT_TESTS:$(TEST_DIR)/unit/%_test.cpp=$(BUILD_DIR)/%_test.o)
+TEST_OBJECTS    = $(UNIT_TESTS:$(TEST_DIR)/unit/%_test.cpp=$(BUILD_DIR)/%_test.o)
 TEST_RUNNER_OBJ = $(BUILD_DIR)/test_runner.o
+
+# Pretty-print helpers
+ECHO_CC = @printf " CC      %s\n" $<
+ECHO_LD = @printf " LD      %s\n" $@
+ECHO_MK = @printf " MKDIR   %s\n" $@
 
 # Default target
 all: $(TARGET)
 
 # Create directories
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+	$(ECHO_MK) $@
+	@mkdir -p $@
 
 $(BIN_DIR):
-	mkdir -p $(BIN_DIR)
+	$(ECHO_MK) $@
+	@mkdir -p $@
 
 # Main compiler executable
 $(TARGET): $(OBJECTS) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS) -lc++
+	$(ECHO_LD)
+	@$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS) -lc++
 
 # Object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS) | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+	$(ECHO_CC)
+	@$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
 # Test executable
 $(TEST_TARGET): $(TEST_RUNNER_OBJ) $(TEST_OBJECTS) $(filter-out build/main.o, $(OBJECTS)) | $(BIN_DIR)
-	$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS) -lc++
+	$(ECHO_LD)
+	@$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS) -lc++
 
 # Test object files
 $(BUILD_DIR)/%_test.o: $(TEST_DIR)/unit/%_test.cpp $(HEADERS) | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+	$(ECHO_CC)
+	@$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
 # Test runner object file
 $(TEST_RUNNER_OBJ): $(TEST_RUNNER) $(HEADERS) | $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+	$(ECHO_CC)
+	@$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
 # Check LLVM installation
 check:
@@ -101,12 +113,12 @@ install: $(TARGET)
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  all          - Build the compiler"
-	@echo "  check        - Check LLVM installation"
-	@echo "  test         - Run unit tests"
+	@echo "  all              - Build the compiler"
+	@echo "  check            - Check LLVM installation"
+	@echo "  test             - Run unit tests"
 	@echo "  test-integration - Run integration tests"
-	@echo "  clean        - Clean build artifacts"
-	@echo "  install      - Install compiler to /usr/local/bin"
-	@echo "  help         - Show this help"
+	@echo "  clean            - Clean build artifacts"
+	@echo "  install          - Install compiler to /usr/local/bin"
+	@echo "  help             - Show this help"
 
 .PHONY: all check test test-integration clean install help

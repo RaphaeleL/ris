@@ -24,6 +24,20 @@ int test_parser_function_call();
 int test_parser_array_access();
 int test_parser_complex_program();
 int test_parser_error_handling();
+int test_semantic_valid_program();
+int test_semantic_undefined_variable();
+int test_semantic_duplicate_variable();
+int test_semantic_type_mismatch();
+int test_semantic_arithmetic_operations();
+int test_semantic_boolean_operations();
+int test_semantic_comparison_operations();
+int test_semantic_function_calls();
+int test_semantic_wrong_argument_count();
+int test_semantic_undefined_function();
+int test_semantic_control_flow();
+int test_semantic_array_operations();
+int test_semantic_scope_handling();
+int test_semantic_implicit_conversions();
 int test_main_basic();
 
 int main() {
@@ -53,6 +67,20 @@ int main() {
     result += test_parser_array_access();
     result += test_parser_complex_program();
     result += test_parser_error_handling();
+    result += test_semantic_valid_program();
+    result += test_semantic_undefined_variable();
+    result += test_semantic_duplicate_variable();
+    result += test_semantic_type_mismatch();
+    result += test_semantic_arithmetic_operations();
+    result += test_semantic_boolean_operations();
+    result += test_semantic_comparison_operations();
+    result += test_semantic_function_calls();
+    result += test_semantic_wrong_argument_count();
+    result += test_semantic_undefined_function();
+    result += test_semantic_control_flow();
+    result += test_semantic_array_operations();
+    result += test_semantic_scope_handling();
+    result += test_semantic_implicit_conversions();
     
     if (result == 0) {
         std::cout << "All tests passed!" << std::endl;

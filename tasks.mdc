@@ -17,7 +17,7 @@ Core MVP (minimum viable compiler)
 - Acceptance: all parser unit tests pass; parser correctly handles functions, variables, control flow, expressions, and error cases.
 - Tests: parser unit tests in `tests/unit/parser_test.cpp` with 14 test cases covering basic functions, parameters, variable declarations, arrays, expressions, control flow, function calls, and error handling.
 
-4. T030 - Semantic analyzer / type checker (no pointers) — TODO
+4. T030 - Semantic analyzer / type checker (no pointers) — DONE
 - Deliverables: static type checker that enforces types, scoping, function signatures, and reports clear errors.
 - Acceptance: semantic tests and negative tests (type errors) covering mismatches, missing identifiers, shadowing rules.
 
