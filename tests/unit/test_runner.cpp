@@ -51,6 +51,16 @@ int test_parser_continue_statement();
 int test_parser_list_literal();
 int test_parser_list_method_calls();
 int test_parser_list_indexing();
+int test_parser_complex_expressions();
+int test_parser_nested_control_flow();
+int test_parser_switch_statement_complex();
+int test_parser_list_operations_complex();
+int test_parser_function_overloading();
+int test_parser_global_variables();
+int test_parser_increment_operators();
+int test_parser_unary_operators();
+int test_parser_error_handling_comprehensive();
+int test_parser_edge_cases();
 int test_semantic_valid_program();
 int test_semantic_undefined_variable();
 int test_semantic_duplicate_variable();
@@ -139,6 +149,16 @@ int main() {
         {"test_parser_list_literal", test_parser_list_literal},
         {"test_parser_list_method_calls", test_parser_list_method_calls},
         {"test_parser_list_indexing", test_parser_list_indexing},
+        {"test_parser_complex_expressions", test_parser_complex_expressions},
+        {"test_parser_nested_control_flow", test_parser_nested_control_flow},
+        {"test_parser_switch_statement_complex", test_parser_switch_statement_complex},
+        {"test_parser_list_operations_complex", test_parser_list_operations_complex},
+        {"test_parser_function_overloading", test_parser_function_overloading},
+        {"test_parser_global_variables", test_parser_global_variables},
+        {"test_parser_increment_operators", test_parser_increment_operators},
+        {"test_parser_unary_operators", test_parser_unary_operators},
+        {"test_parser_error_handling_comprehensive", test_parser_error_handling_comprehensive},
+        {"test_parser_edge_cases", test_parser_edge_cases},
         {"test_semantic_valid_program", test_semantic_valid_program},
         {"test_semantic_undefined_variable", test_semantic_undefined_variable},
         {"test_semantic_duplicate_variable", test_semantic_duplicate_variable},
