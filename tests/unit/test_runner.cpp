@@ -144,22 +144,36 @@ int main() {
         // Print the aligned test start
         test_utils::print_test_start(test.name, max_length);
         
-        // Redirect stdout to suppress test function output
+        // Redirect stdout and stderr to capture test output
         std::streambuf* original_cout = std::cout.rdbuf();
-        std::ostringstream dev_null;
-        std::cout.rdbuf(dev_null.rdbuf());
+        std::streambuf* original_cerr = std::cerr.rdbuf();
+        std::ostringstream captured_output;
+        std::ostringstream captured_errors;
+        std::cout.rdbuf(captured_output.rdbuf());
+        std::cerr.rdbuf(captured_errors.rdbuf());
         
         // Run the test function
         int test_result = test.func();
         
-        // Restore stdout
+        // Restore stdout and stderr
         std::cout.rdbuf(original_cout);
+        std::cerr.rdbuf(original_cerr);
         
         // Print the result
         if (test_result == 0) {
             test_utils::print_test_success();
         } else {
-            test_utils::print_test_failure("Test failed");
+            // Print the failure message inline
+            std::string error_msg = captured_errors.str();
+            // Remove the " FAIL  " prefix and newline from the error message
+            if (error_msg.find(" FAIL  ") == 0) {
+                error_msg = error_msg.substr(7); // Remove " FAIL  "
+            }
+            // Remove trailing newline if present
+            if (!error_msg.empty() && error_msg.back() == '\n') {
+                error_msg.pop_back();
+            }
+            std::cout << " FAIL  " << error_msg << std::endl;
         }
         
         result += test_result;
