@@ -650,15 +650,15 @@ llvm::Value* CodeGenerator::generate_generic_print_call(CallExpr& expr) {
                 builder_->CreateStore(arg_value, value_ptr);
             } else if (arg_value->getType()->isPointerTy()) {
                 // Check if this is a list type by looking at the expression
-                if (auto* list_literal = dynamic_cast<ListLiteralExpr*>(arg_expr.get())) {
+                if (dynamic_cast<ListLiteralExpr*>(arg_expr.get())) {
                     // This is a list literal - handle it specially
                     type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 5); // TYPE_LIST
                     value_ptr = arg_value; // List values are already pointers
-                } else if (auto* list_index = dynamic_cast<ListIndexExpr*>(arg_expr.get())) {
+                } else if (dynamic_cast<ListIndexExpr*>(arg_expr.get())) {
                     // This is a list indexing - also a list type
                     type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 5); // TYPE_LIST
                     value_ptr = arg_value; // List values are already pointers
-                } else if (auto* identifier = dynamic_cast<IdentifierExpr*>(arg_expr.get())) {
+                } else if (dynamic_cast<IdentifierExpr*>(arg_expr.get())) {
                     // This is a variable - check if it's a list type
                     // We need to determine the type from the semantic analyzer
                     // For now, assume it's a list if it's a pointer
@@ -1478,7 +1478,7 @@ llvm::Value* CodeGenerator::generate_list_method_call_expression(ListMethodCallE
                     element_type = TYPE_LIST;
                 }
             }
-        } else if (auto* list_index = dynamic_cast<ListIndexExpr*>(expr.list.get())) {
+        } else if (dynamic_cast<ListIndexExpr*>(expr.list.get())) {
             // For list index expressions, we need to determine the element type from the original list
             // For now, assume it's a list for nested lists
             element_type = TYPE_LIST;
@@ -1619,12 +1619,12 @@ llvm::Value* CodeGenerator::generate_list_method_call_expression(ListMethodCallE
                 element_type = TYPE_LIST;
             }
         }
-    } else if (auto* list_index = dynamic_cast<ListIndexExpr*>(expr.list.get())) {
+    } else if (dynamic_cast<ListIndexExpr*>(expr.list.get())) {
         // This is chained indexing - the list is itself a list index expression
         // The previous indexing should have returned a list pointer, so we need to determine
         // the element type of the nested list. For now, assume it's an integer.
         element_type = TYPE_INT;
-    } else if (auto* identifier = dynamic_cast<IdentifierExpr*>(expr.list.get())) {
+    } else if (dynamic_cast<IdentifierExpr*>(expr.list.get())) {
         // For variable references, we need to determine the element type from the variable type
         // This is a complex issue that requires type information from the semantic analyzer
         // For now, assume all variable references are nested lists to fix the indexing issue
