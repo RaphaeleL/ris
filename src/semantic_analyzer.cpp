@@ -81,6 +81,13 @@ std::unique_ptr<Type> SemanticAnalyzer::analyze_expression_type(Expr& expr) {
         // For binary expressions, determine the result type based on the operator
         switch (binary->op) {
             case TokenType::PLUS:
+                // String concatenation returns string, arithmetic returns left operand type
+                if (auto left_type = analyze_expression_type(*binary->left)) {
+                    if (left_type->to_string() == "string") {
+                        return left_type; // String concatenation returns string
+                    }
+                }
+                // Fall through to arithmetic case
             case TokenType::MINUS:
             case TokenType::MULTIPLY:
             case TokenType::DIVIDE:
@@ -460,6 +467,12 @@ void SemanticAnalyzer::analyze_binary_expression(BinaryExpr& expr) {
     
     switch (expr.op) {
         case TokenType::PLUS:
+            // Allow string concatenation: string + string
+            if (left_type->to_string() == "string" && right_type->to_string() == "string") {
+                // String concatenation is allowed
+                break;
+            }
+            // Fall through to arithmetic check for numeric types
         case TokenType::MINUS:
         case TokenType::MULTIPLY:
         case TokenType::DIVIDE:

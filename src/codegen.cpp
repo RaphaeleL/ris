@@ -385,7 +385,18 @@ llvm::Value* CodeGenerator::generate_binary_expression(BinaryExpr& expr) {
             }
         }
         case TokenType::PLUS:
-            if (left->getType()->isFloatingPointTy()) {
+            // Check if this is string concatenation
+            if (left->getType()->isPointerTy() && right->getType()->isPointerTy()) {
+                // String concatenation using ris_string_concat
+                auto concat_func = functions_.find("ris_string_concat");
+                if (concat_func != functions_.end()) {
+                    std::vector<llvm::Value*> args = {left, right};
+                    return builder_->CreateCall(concat_func->second, args, "concat");
+                } else {
+                    error("String concatenation function not found");
+                    return nullptr;
+                }
+            } else if (left->getType()->isFloatingPointTy()) {
                 return builder_->CreateFAdd(left, right, "addtmp");
             } else {
                 return builder_->CreateAdd(left, right, "addtmp");
@@ -577,10 +588,41 @@ llvm::Value* CodeGenerator::generate_generic_print_call(CallExpr& expr) {
                     return nullptr;
             }
         } else {
-            // For non-literal expressions, we need to determine the type from the expression's type
-            // This is a simplified approach - in a real implementation, you'd want to track types more carefully
-            error("Print currently only supports literal expressions");
-            return nullptr;
+            // For non-literal expressions, determine type based on the LLVM type of the generated value
+            if (arg_value->getType()->isIntegerTy(64)) {
+                // int type
+                type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 0); // TYPE_INT
+                value_ptr = builder_->CreateAlloca(llvm::Type::getInt64Ty(*context_));
+                builder_->CreateStore(arg_value, value_ptr);
+            } else if (arg_value->getType()->isDoubleTy()) {
+                // float type
+                type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 1); // TYPE_FLOAT
+                value_ptr = builder_->CreateAlloca(llvm::Type::getDoubleTy(*context_));
+                builder_->CreateStore(arg_value, value_ptr);
+            } else if (arg_value->getType()->isIntegerTy(8)) {
+                // bool or char type - need to determine which
+                if (auto* literal = dynamic_cast<LiteralExpr*>(arg_expr.get())) {
+                    if (literal->type == TokenType::TRUE || literal->type == TokenType::FALSE) {
+                        // bool type
+                        type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 2); // TYPE_BOOL
+                    } else {
+                        // char type
+                        type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 3); // TYPE_CHAR
+                    }
+                } else {
+                    // For non-literal expressions, assume char if it's i8
+                    type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 3); // TYPE_CHAR
+                }
+                value_ptr = builder_->CreateAlloca(llvm::Type::getInt8Ty(*context_));
+                builder_->CreateStore(arg_value, value_ptr);
+            } else if (arg_value->getType()->isPointerTy()) {
+                // string type (pointer to char)
+                type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 4); // TYPE_STRING
+                value_ptr = arg_value; // String values are already pointers
+            } else {
+                error("Unsupported type for print: " + std::to_string(arg_value->getType()->getTypeID()));
+                return nullptr;
+            }
         }
         
         // Choose the appropriate print function
