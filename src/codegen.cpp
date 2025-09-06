@@ -6,6 +6,7 @@
 #include <llvm/Support/TargetSelect.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 namespace ris {
 
@@ -54,6 +55,22 @@ void CodeGenerator::error(const std::string& message) {
     has_error_ = true;
     error_message_ = message;
     std::cerr << "CodeGen error: " << message << std::endl;
+}
+
+void CodeGenerator::error(const std::string& message, const SourcePos& position) {
+    has_error_ = true;
+    std::stringstream ss;
+    ss << message << " at " << position.line << ":" << position.column;
+    std::string full_message = ss.str();
+    
+    if (error_message_.empty()) {
+        error_message_ = full_message;
+    }
+    
+    std::cerr << "CodeGen error: " << full_message << std::endl;
+    
+    // Also add to centralized diagnostic system
+    diagnostics_.add_error(message, position, "codegen");
 }
 
 llvm::Type* CodeGenerator::get_llvm_type(const Type& type) {

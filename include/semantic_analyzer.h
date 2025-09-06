@@ -3,6 +3,7 @@
 #include "ast.h"
 #include "types.h"
 #include "symbol_table.h"
+#include "diagnostics.h"
 #include <string>
 #include <vector>
 
@@ -19,12 +20,17 @@ public:
     bool has_error() const { return has_error_; }
     const std::string& error_message() const { return error_message_; }
     const std::vector<std::string>& errors() const { return errors_; }
+    
+    // Get the diagnostic reporter
+    DiagnosticReporter& get_diagnostics() { return diagnostics_; }
+    const DiagnosticReporter& get_diagnostics() const { return diagnostics_; }
 
 private:
     SymbolTable symbol_table_;
     bool has_error_;
     std::string error_message_;
     std::vector<std::string> errors_;
+    DiagnosticReporter diagnostics_;
     
     // Helper methods
     void error(const std::string& message, const SourcePos& position);

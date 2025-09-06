@@ -8,6 +8,7 @@
 #include "parser.h"
 #include "semantic_analyzer.h"
 #include "codegen.h"
+#include "diagnostics.h"
 
 int main(int argc, char* argv[]) {
     std::string input_file;

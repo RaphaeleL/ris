@@ -31,6 +31,9 @@ void SemanticAnalyzer::error(const std::string& message, const SourcePos& positi
     }
     
     errors_.push_back(full_message);
+    
+    // Also add to centralized diagnostic system
+    diagnostics_.add_error(message, position, "semantic");
 }
 
 void SemanticAnalyzer::add_error(const std::string& message) {

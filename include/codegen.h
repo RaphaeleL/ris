@@ -2,6 +2,7 @@
 
 #include "ast.h"
 #include "types.h"
+#include "diagnostics.h"
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/IRBuilder.h>
@@ -26,6 +27,10 @@ public:
     bool has_error() const { return has_error_; }
     const std::string& error_message() const { return error_message_; }
     
+    // Get the diagnostic reporter
+    DiagnosticReporter& get_diagnostics() { return diagnostics_; }
+    const DiagnosticReporter& get_diagnostics() const { return diagnostics_; }
+    
 private:
     // LLVM context and modules
     std::unique_ptr<llvm::LLVMContext> context_;
@@ -35,6 +40,7 @@ private:
     // Error handling
     bool has_error_;
     std::string error_message_;
+    DiagnosticReporter diagnostics_;
     
     // Symbol table for code generation
     std::map<std::string, llvm::Value*> named_values_;
@@ -42,6 +48,7 @@ private:
     
     // Helper methods
     void error(const std::string& message);
+    void error(const std::string& message, const SourcePos& position);
     
     // Type conversion
     llvm::Type* get_llvm_type(const Type& type);
