@@ -1,0 +1,1 @@
+int main() { std::string code = "+ - * / % == != < > <= >= && || ! = ++"; ris::Lexer lexer(code); auto tokens = lexer.tokenize(); std::cout << "Token count: " << tokens.size() << std::endl; for (size_t i = 0; i < tokens.size(); ++i) { std::cout << i << ": " << token_type_to_string(tokens[i].type) << " \"" << tokens[i].value << "\"" << std::endl; } return 0; }

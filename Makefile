@@ -85,11 +85,6 @@ $(BUILD_DIR)/%_test.o: $(TEST_DIR)/unit/%_test.cpp $(HEADERS) | $(BUILD_DIR)
 	$(ECHO_CC)
 	@$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
-# Special handling for runtime test (needs runtime library)
-$(BUILD_DIR)/runtime_test.o: $(TEST_DIR)/unit/runtime_test.cpp $(HEADERS) | $(BUILD_DIR)
-	$(ECHO_CC)
-	@$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
-
 # Test runner object file
 $(TEST_RUNNER_OBJ): $(TEST_RUNNER) $(HEADERS) | $(BUILD_DIR)
 	$(ECHO_CC)
