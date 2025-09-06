@@ -7,6 +7,6 @@ int main() {
         count = count + 1;
     }
     
-    ris_println_int(count);
+    println(count);
     return count;
 }

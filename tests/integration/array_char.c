@@ -9,11 +9,11 @@ int main() {
     arr[4] = 'o';
     
     // Access and print elements
-    ris_println_char(arr[0]);
-    ris_println_char(arr[1]);
-    ris_println_char(arr[2]);
-    ris_println_char(arr[3]);
-    ris_println_char(arr[4]);
+    println(arr[0]);
+    println(arr[1]);
+    println(arr[2]);
+    println(arr[3]);
+    println(arr[4]);
     
     return 0;
 }

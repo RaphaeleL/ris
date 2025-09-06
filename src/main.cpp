@@ -119,7 +119,11 @@ int main(int argc, char* argv[]) {
     }
 
     // Generate LLVM IR
-    std::string llvm_output = compile_executable ? "temp_output.ll" : output_file;
+    std::string llvm_output = compile_executable ? "out/temp_output.ll" : "out/" + output_file;
+    
+    // Ensure out directory exists for LLVM IR generation
+    std::filesystem::create_directories("out");
+    
     ris::CodeGenerator codegen;
     bool codegen_ok = codegen.generate(std::move(program), llvm_output);
     
@@ -133,9 +137,12 @@ int main(int argc, char* argv[]) {
             std::cout << "Code generation completed! Compiling to executable..." << std::endl;
         }
         
+        // Ensure out directory exists
+        std::filesystem::create_directories("out");
+        
         // Use LLVM toolchain: llc -> clang for linking
-        std::string asm_output = "temp_output.s";
-        std::string runtime_lib = "bin/libris_runtime.a";
+        std::string asm_output = "out/temp_output.s";
+        std::string runtime_lib = "out/bin/libris_runtime.a";
         std::string final_output = output_file;
         
         #ifdef _WIN32

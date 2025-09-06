@@ -1,10 +1,10 @@
 void print_hello() {
-    ris_println_string("Hello, World!");
+    println("Hello, World!");
 }
 
 void print_numbers(int a, int b) {
-    ris_println_int(a);
-    ris_println_int(b);
+    println(a);
+    println(b);
 }
 
 int main() {

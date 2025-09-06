@@ -9,18 +9,19 @@
 // Runtime functions for the RIS language
 extern "C" {
 
-// Basic I/O functions
-void ris_print_int(int64_t value);
-void ris_print_float(double value);
-void ris_print_bool(int8_t value);
-void ris_print_char(int8_t value);
-void ris_print_string(const char* str);
-void ris_println_int(int64_t value);
-void ris_println_float(double value);
-void ris_println_bool(int8_t value);
-void ris_println_char(int8_t value);
-void ris_println_string(const char* str);
-void ris_println();
+// Type tags for generic print function
+typedef enum {
+    TYPE_INT = 0,
+    TYPE_FLOAT = 1,
+    TYPE_BOOL = 2,
+    TYPE_CHAR = 3,
+    TYPE_STRING = 4
+} type_tag_t;
+
+// Print functions (like Python's print)
+void print(type_tag_t type, const void* value);
+void println(type_tag_t type, const void* value);
+void print_with_space(type_tag_t type, const void* value);
 
 // Memory management functions
 void* ris_malloc(size_t size);

@@ -8,10 +8,10 @@ int main() {
     arr[3] = false;
     
     // Access and print elements
-    ris_println_bool(arr[0]);
-    ris_println_bool(arr[1]);
-    ris_println_bool(arr[2]);
-    ris_println_bool(arr[3]);
+    println(arr[0]);
+    println(arr[1]);
+    println(arr[2]);
+    println(arr[3]);
     
     return 0;
 }

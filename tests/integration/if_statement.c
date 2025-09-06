@@ -8,6 +8,6 @@ int main() {
         result = 0;
     }
     
-    ris_println_int(result);
+    println(result);
     return result;
 }

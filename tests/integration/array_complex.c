@@ -22,7 +22,7 @@ int main() {
     
     // Calculate sum
     int result = sum_array(numbers);
-    ris_println_int(result);
+    println(result);
     
     // Modify array elements
     numbers[0] = 10;
@@ -30,7 +30,7 @@ int main() {
     
     // Calculate new sum
     result = sum_array(numbers);
-    ris_println_int(result);
+    println(result);
     
     return result;
 }

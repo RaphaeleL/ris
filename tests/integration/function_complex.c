@@ -22,6 +22,6 @@ int calculate(int x, int y, int z) {
 
 int main() {
     int result = calculate(10, 5, 8);
-    ris_println_int(result);
+    println(result);
     return result;
 }

@@ -12,6 +12,6 @@ int factorial(int n) {
 
 int main() {
     int result = factorial(5);
-    ris_println_int(result);
+    println(result);
     return result;
 }

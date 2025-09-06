@@ -4,6 +4,6 @@ int add(int a, int b) {
 
 int main() {
     int result = add(3, 4);
-    ris_println_int(result);
+    println(result);
     return result;
 }

@@ -1,7 +1,7 @@
 int main() {
-    ris_println_string("Foo, World!");
-    ris_print_int(42);
-    ris_println_string("\n");
-    ris_println_bool(true);
+    println("Foo, World!");
+    print(42);
+    println("\n");
+    println(true);
     return 0;
 }

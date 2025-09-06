@@ -17,6 +17,6 @@ int main() {
         sum = sum + i;
     }
     
-    ris_println_int(sum);
+    println(sum);
     return sum;
 }

@@ -478,6 +478,11 @@ llvm::Value* CodeGenerator::generate_unary_expression(UnaryExpr& expr) {
 }
 
 llvm::Value* CodeGenerator::generate_call_expression(CallExpr& expr) {
+    // Handle generic print functions specially
+    if (expr.function_name == "print" || expr.function_name == "println") {
+        return generate_generic_print_call(expr);
+    }
+    
     auto it = functions_.find(expr.function_name);
     if (it == functions_.end()) {
         error("Undefined function: " + expr.function_name);
@@ -493,6 +498,113 @@ llvm::Value* CodeGenerator::generate_call_expression(CallExpr& expr) {
     }
     
     return builder_->CreateCall(func, args);
+}
+
+llvm::Value* CodeGenerator::generate_generic_print_call(CallExpr& expr) {
+    if (expr.arguments.empty()) {
+        // Handle println() with no arguments - just print a newline
+        if (expr.function_name == "println") {
+            // Just print a newline by calling print with a newline string
+            auto type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 4); // TYPE_STRING
+            auto newline_str = builder_->CreateGlobalStringPtr("\n");
+            auto it = functions_.find("print");
+            if (it != functions_.end()) {
+                std::vector<llvm::Value*> args = {type_tag, newline_str};
+                return builder_->CreateCall(it->second, args);
+            }
+        }
+        error("print() requires at least one argument");
+        return nullptr;
+    }
+    
+    // Get the print functions
+    auto print_it = functions_.find("print");
+    auto print_with_space_it = functions_.find("print_with_space");
+    if (print_it == functions_.end() || print_with_space_it == functions_.end()) {
+        error("Print functions not found");
+        return nullptr;
+    }
+    llvm::Function* print_func = print_it->second;
+    llvm::Function* print_with_space_func = print_with_space_it->second;
+    
+    // Process each argument with appropriate print function
+    for (size_t i = 0; i < expr.arguments.size(); ++i) {
+        auto& arg_expr = expr.arguments[i];
+        auto arg_value = generate_expression(*arg_expr);
+        if (!arg_value) {
+            error("Failed to generate argument for print");
+            return nullptr;
+        }
+        
+        // Determine the type tag based on the argument type
+        llvm::Value* type_tag = nullptr;
+        llvm::Value* value_ptr = nullptr;
+        
+        // Get the type of the argument by checking the expression type
+        if (auto* literal = dynamic_cast<LiteralExpr*>(arg_expr.get())) {
+            switch (literal->type) {
+                case TokenType::INTEGER_LITERAL:
+                    type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 0); // TYPE_INT
+                    // Allocate space for the int value
+                    value_ptr = builder_->CreateAlloca(llvm::Type::getInt64Ty(*context_));
+                    builder_->CreateStore(arg_value, value_ptr);
+                    break;
+                case TokenType::FLOAT_LITERAL:
+                    type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 1); // TYPE_FLOAT
+                    // Allocate space for the float value
+                    value_ptr = builder_->CreateAlloca(llvm::Type::getDoubleTy(*context_));
+                    builder_->CreateStore(arg_value, value_ptr);
+                    break;
+                case TokenType::TRUE:
+                case TokenType::FALSE:
+                    type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 2); // TYPE_BOOL
+                    // Allocate space for the bool value
+                    value_ptr = builder_->CreateAlloca(llvm::Type::getInt8Ty(*context_));
+                    builder_->CreateStore(arg_value, value_ptr);
+                    break;
+                case TokenType::CHAR_LITERAL:
+                    type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 3); // TYPE_CHAR
+                    // Allocate space for the char value
+                    value_ptr = builder_->CreateAlloca(llvm::Type::getInt8Ty(*context_));
+                    builder_->CreateStore(arg_value, value_ptr);
+                    break;
+                case TokenType::STRING_LITERAL:
+                    type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 4); // TYPE_STRING
+                    value_ptr = arg_value; // String literals are already pointers
+                    break;
+                default:
+                    error("Unsupported literal type for print");
+                    return nullptr;
+            }
+        } else {
+            // For non-literal expressions, we need to determine the type from the expression's type
+            // This is a simplified approach - in a real implementation, you'd want to track types more carefully
+            error("Print currently only supports literal expressions");
+            return nullptr;
+        }
+        
+        // Choose the appropriate print function
+        llvm::Function* func_to_call = (i < expr.arguments.size() - 1) ? print_with_space_func : print_func;
+        
+        // Call the appropriate print function
+        std::vector<llvm::Value*> args = {type_tag, value_ptr};
+        builder_->CreateCall(func_to_call, args);
+    }
+    
+    // If this is println, add a newline at the end
+    if (expr.function_name == "println") {
+        // Just print a newline using the print function
+        auto print_it = functions_.find("print");
+        if (print_it != functions_.end()) {
+            auto type_tag = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), 4); // TYPE_STRING
+            auto newline_str = builder_->CreateGlobalStringPtr("\n");
+            std::vector<llvm::Value*> args = {type_tag, newline_str};
+            builder_->CreateCall(print_it->second, args);
+        }
+    }
+    
+    // Return void for print functions
+    return llvm::Constant::getNullValue(llvm::Type::getVoidTy(*context_));
 }
 
 llvm::Value* CodeGenerator::generate_array_access_expression(ArrayIndexExpr& expr) {
@@ -947,89 +1059,39 @@ void CodeGenerator::create_main_function() {
 void CodeGenerator::declare_runtime_functions() {
     // Declare print functions
     auto void_type = llvm::Type::getVoidTy(*context_);
-    auto int64_type = llvm::Type::getInt64Ty(*context_);
-    auto int8_type = llvm::Type::getInt8Ty(*context_);
-    auto double_type = llvm::Type::getDoubleTy(*context_);
     auto string_type = llvm::PointerType::get(*context_, 0);
     auto size_t_type = llvm::Type::getInt64Ty(*context_);
     auto int32_type = llvm::Type::getInt32Ty(*context_);
     
-    // ris_print_int
+    // Print functions (like Python's print)
+    // print(type_tag, value_ptr)
     {
-        auto func_type = llvm::FunctionType::get(void_type, {int64_type}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_print_int", module_.get());
-        functions_["ris_print_int"] = func;
+        auto type_tag_type = llvm::Type::getInt32Ty(*context_);
+        auto void_ptr_type = llvm::PointerType::get(*context_, 0);
+        auto func_type = llvm::FunctionType::get(void_type, {type_tag_type, void_ptr_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "print", module_.get());
+        functions_["print"] = func;
     }
     
-    // ris_print_float
+    // println(type_tag, value_ptr)
     {
-        auto func_type = llvm::FunctionType::get(void_type, {double_type}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_print_float", module_.get());
-        functions_["ris_print_float"] = func;
+        auto type_tag_type = llvm::Type::getInt32Ty(*context_);
+        auto void_ptr_type = llvm::PointerType::get(*context_, 0);
+        auto func_type = llvm::FunctionType::get(void_type, {type_tag_type, void_ptr_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "println", module_.get());
+        functions_["println"] = func;
     }
     
-    // ris_print_bool
+    // print_with_space(type_tag, value_ptr)
     {
-        auto func_type = llvm::FunctionType::get(void_type, {int8_type}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_print_bool", module_.get());
-        functions_["ris_print_bool"] = func;
+        auto type_tag_type = llvm::Type::getInt32Ty(*context_);
+        auto void_ptr_type = llvm::PointerType::get(*context_, 0);
+        auto func_type = llvm::FunctionType::get(void_type, {type_tag_type, void_ptr_type}, false);
+        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "print_with_space", module_.get());
+        functions_["print_with_space"] = func;
     }
     
-    // ris_print_char
-    {
-        auto func_type = llvm::FunctionType::get(void_type, {int8_type}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_print_char", module_.get());
-        functions_["ris_print_char"] = func;
-    }
     
-    // ris_print_string
-    {
-        auto func_type = llvm::FunctionType::get(void_type, {string_type}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_print_string", module_.get());
-        functions_["ris_print_string"] = func;
-    }
-    
-    // ris_println_int
-    {
-        auto func_type = llvm::FunctionType::get(void_type, {int64_type}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println_int", module_.get());
-        functions_["ris_println_int"] = func;
-    }
-    
-    // ris_println_float
-    {
-        auto func_type = llvm::FunctionType::get(void_type, {double_type}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println_float", module_.get());
-        functions_["ris_println_float"] = func;
-    }
-    
-    // ris_println_bool
-    {
-        auto func_type = llvm::FunctionType::get(void_type, {int8_type}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println_bool", module_.get());
-        functions_["ris_println_bool"] = func;
-    }
-    
-    // ris_println_char
-    {
-        auto func_type = llvm::FunctionType::get(void_type, {int8_type}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println_char", module_.get());
-        functions_["ris_println_char"] = func;
-    }
-    
-    // ris_println_string
-    {
-        auto func_type = llvm::FunctionType::get(void_type, {string_type}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println_string", module_.get());
-        functions_["ris_println_string"] = func;
-    }
-    
-    // ris_println
-    {
-        auto func_type = llvm::FunctionType::get(void_type, {}, false);
-        auto func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, "ris_println", module_.get());
-        functions_["ris_println"] = func;
-    }
     
     // ris_malloc
     {

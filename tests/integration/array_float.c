@@ -7,9 +7,9 @@ int main() {
     arr[2] = 3.9;
     
     // Access and print elements
-    ris_println_float(arr[0]);
-    ris_println_float(arr[1]);
-    ris_println_float(arr[2]);
+    println(arr[0]);
+    println(arr[1]);
+    println(arr[2]);
     
     return 0;
 }

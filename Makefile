@@ -71,7 +71,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS) | $(BUILD_DIR)
 	@$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
 # Test executable
-$(TEST_TARGET): $(TEST_RUNNER_OBJ) $(TEST_OBJECTS) $(filter-out build/main.o, $(OBJECTS)) | $(BIN_DIR)
+$(TEST_TARGET): $(TEST_RUNNER_OBJ) $(TEST_OBJECTS) $(filter-out $(BUILD_DIR)/main.o, $(OBJECTS)) | $(BIN_DIR)
 	$(ECHO_LD)
 	@$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS)
 

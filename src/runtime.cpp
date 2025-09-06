@@ -7,54 +7,40 @@
 
 extern "C" {
 
-void ris_print_int(int64_t value) {
-    std::cout << value;
-}
-
-void ris_print_float(double value) {
-    std::cout << value;
-}
-
-void ris_print_bool(int8_t value) {
-    std::cout << (value ? "true" : "false");
-}
-
-void ris_print_char(int8_t value) {
-    std::cout << static_cast<char>(value);
-}
-
-void ris_print_string(const char* str) {
-    if (str) {
-        std::cout << str;
+// Generic print function (like Python's print)
+void print(type_tag_t type, const void* value) {
+    switch (type) {
+        case TYPE_INT:
+            std::cout << *static_cast<const int64_t*>(value);
+            break;
+        case TYPE_FLOAT:
+            std::cout << *static_cast<const double*>(value);
+            break;
+        case TYPE_BOOL:
+            std::cout << (*static_cast<const int8_t*>(value) ? "true" : "false");
+            break;
+        case TYPE_CHAR:
+            std::cout << static_cast<char>(*static_cast<const int8_t*>(value));
+            break;
+        case TYPE_STRING:
+            if (value) {
+                std::cout << static_cast<const char*>(value);
+            }
+            break;
+        default:
+            std::cout << "<unknown type>";
+            break;
     }
 }
 
-void ris_println_int(int64_t value) {
-    std::cout << value << std::endl;
-}
-
-void ris_println_float(double value) {
-    std::cout << value << std::endl;
-}
-
-void ris_println_bool(int8_t value) {
-    std::cout << (value ? "true" : "false") << std::endl;
-}
-
-void ris_println_char(int8_t value) {
-    std::cout << static_cast<char>(value) << std::endl;
-}
-
-void ris_println_string(const char* str) {
-    if (str) {
-        std::cout << str << std::endl;
-    } else {
-        std::cout << std::endl;
-    }
-}
-
-void ris_println() {
+void println(type_tag_t type, const void* value) {
+    print(type, value);
     std::cout << std::endl;
+}
+
+void print_with_space(type_tag_t type, const void* value) {
+    print(type, value);
+    std::cout << " ";
 }
 
 void* ris_malloc(size_t size) {

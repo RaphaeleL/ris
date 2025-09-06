@@ -17,7 +17,7 @@ int main() {
         i = i + 1;
     }
     
-    ris_println_int(sum);
+    println(sum);
     
     // Modify array elements
     numbers[0] = 10;
@@ -32,7 +32,7 @@ int main() {
         i = i + 1;
     }
     
-    ris_println_int(sum);
+    println(sum);
     
     return sum;
 }

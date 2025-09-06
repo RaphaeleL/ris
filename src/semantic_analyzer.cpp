@@ -519,6 +519,16 @@ void SemanticAnalyzer::analyze_unary_expression(UnaryExpr& expr) {
 }
 
 void SemanticAnalyzer::analyze_call_expression(CallExpr& expr) {
+    // Handle print functions specially
+    if (expr.function_name == "print" || expr.function_name == "println") {
+        // For print/println, allow any number of arguments of any type
+        for (auto& arg : expr.arguments) {
+            analyze_expression(*arg);
+            // No type checking - accept any type
+        }
+        return;
+    }
+    
     Symbol* symbol = symbol_table_.lookup(expr.function_name);
     if (!symbol || symbol->kind() != Symbol::Kind::FUNCTION) {
         error("Function '" + expr.function_name + "' not found", expr.position);
@@ -617,17 +627,10 @@ void SemanticAnalyzer::add_runtime_functions() {
     };
     
     // Add all runtime functions
-    add_func("ris_print_int", "void", {"int"});
-    add_func("ris_print_float", "void", {"float"});
-    add_func("ris_print_bool", "void", {"bool"});
-    add_func("ris_print_char", "void", {"char"});
-    add_func("ris_print_string", "void", {"string"});
-    add_func("ris_println_int", "void", {"int"});
-    add_func("ris_println_float", "void", {"float"});
-    add_func("ris_println_bool", "void", {"bool"});
-    add_func("ris_println_char", "void", {"char"});
-    add_func("ris_println_string", "void", {"string"});
-    add_func("ris_println", "void", {});
+    // Print functions (like Python's print) - register as special functions
+    add_func("print", "void", {"int"}); // This will be the only one registered, but we'll handle it specially
+    add_func("println", "void", {"int"}); // This will be the only one registered, but we'll handle it specially
+    
     add_func("ris_malloc", "string", {"int"});
     add_func("ris_free", "void", {"string"});
     add_func("ris_string_concat", "string", {"string", "string"});

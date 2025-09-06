@@ -8,6 +8,6 @@ int fibonacci(int n) {
 
 int main() {
     int result = fibonacci(6);
-    ris_println_int(result);
+    println(result);
     return result;
 }
