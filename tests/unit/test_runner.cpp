@@ -19,6 +19,16 @@ int test_lexer_punctuation();
 int test_lexer_comments();
 int test_lexer_whitespace();
 int test_lexer_escape_sequences();
+int test_lexer_all_keywords();
+int test_lexer_all_operators();
+int test_lexer_all_punctuation();
+int test_lexer_numeric_literals();
+int test_lexer_string_variations();
+int test_lexer_identifiers_edge_cases();
+int test_lexer_comments_comprehensive();
+int test_lexer_preprocessor_directives();
+int test_lexer_error_conditions();
+int test_lexer_position_tracking();
 int test_parser_basic_function();
 int test_parser_function_with_parameters();
 int test_parser_variable_declaration();
@@ -63,6 +73,62 @@ int test_codegen_string_literals();
 int test_codegen_error_handling();
 int test_main_basic();
 
+// Comprehensive parser tests
+int test_parser_complex_expressions();
+int test_parser_nested_control_flow();
+int test_parser_switch_statement_comprehensive();
+int test_parser_list_operations_comprehensive();
+int test_parser_function_overloading_simulation();
+int test_parser_global_variables();
+int test_parser_increment_operators();
+int test_parser_complex_arithmetic();
+int test_parser_error_recovery();
+int test_parser_edge_cases();
+
+// Comprehensive semantic tests
+int test_semantic_type_coercion();
+int test_semantic_scope_nesting();
+int test_semantic_variable_shadowing();
+int test_semantic_function_signature_matching();
+int test_semantic_list_type_checking();
+int test_semantic_control_flow_type_checking();
+int test_semantic_switch_type_checking();
+int test_semantic_arithmetic_type_promotion();
+int test_semantic_error_detection();
+int test_semantic_return_type_checking();
+int test_semantic_complex_expressions();
+int test_semantic_list_operations_type_safety();
+
+// Comprehensive codegen tests
+int test_codegen_control_flow_comprehensive();
+int test_codegen_switch_statement();
+int test_codegen_function_calls();
+int test_codegen_global_variables_comprehensive();
+int test_codegen_list_operations();
+int test_codegen_arithmetic_operations();
+int test_codegen_float_operations_comprehensive();
+int test_codegen_boolean_operations();
+int test_codegen_comparison_operations();
+int test_codegen_string_operations();
+int test_codegen_increment_operators();
+int test_codegen_complex_expressions();
+int test_codegen_recursive_functions();
+int test_codegen_memory_management();
+
+// Runtime tests
+int test_runtime_list_creation();
+int test_runtime_list_push_pop();
+int test_runtime_list_get();
+int test_runtime_list_size();
+int test_runtime_list_different_types();
+int test_runtime_list_bounds_checking();
+int test_runtime_list_pop_empty();
+int test_runtime_memory_management();
+int test_runtime_list_resize();
+int test_runtime_print_functions();
+int test_runtime_string_operations();
+int test_runtime_memory_allocation();
+
 // Test function structure
 struct TestFunction {
     std::string name;
@@ -93,6 +159,16 @@ int main() {
         {"test_lexer_comments", test_lexer_comments},
         {"test_lexer_whitespace", test_lexer_whitespace},
         {"test_lexer_escape_sequences", test_lexer_escape_sequences},
+        {"test_lexer_all_keywords", test_lexer_all_keywords},
+        {"test_lexer_all_operators", test_lexer_all_operators},
+        {"test_lexer_all_punctuation", test_lexer_all_punctuation},
+        {"test_lexer_numeric_literals", test_lexer_numeric_literals},
+        {"test_lexer_string_variations", test_lexer_string_variations},
+        {"test_lexer_identifiers_edge_cases", test_lexer_identifiers_edge_cases},
+        {"test_lexer_comments_comprehensive", test_lexer_comments_comprehensive},
+        {"test_lexer_preprocessor_directives", test_lexer_preprocessor_directives},
+        {"test_lexer_error_conditions", test_lexer_error_conditions},
+        {"test_lexer_position_tracking", test_lexer_position_tracking},
         {"test_parser_basic_function", test_parser_basic_function},
         {"test_parser_function_with_parameters", test_parser_function_with_parameters},
         {"test_parser_variable_declaration", test_parser_variable_declaration},
@@ -133,6 +209,54 @@ int main() {
         {"test_codegen_float_operations", test_codegen_float_operations},
         {"test_codegen_string_literals", test_codegen_string_literals},
         {"test_codegen_error_handling", test_codegen_error_handling},
+        {"test_parser_complex_expressions", test_parser_complex_expressions},
+        {"test_parser_nested_control_flow", test_parser_nested_control_flow},
+        {"test_parser_switch_statement_comprehensive", test_parser_switch_statement_comprehensive},
+        {"test_parser_list_operations_comprehensive", test_parser_list_operations_comprehensive},
+        {"test_parser_function_overloading_simulation", test_parser_function_overloading_simulation},
+        {"test_parser_global_variables", test_parser_global_variables},
+        {"test_parser_increment_operators", test_parser_increment_operators},
+        {"test_parser_complex_arithmetic", test_parser_complex_arithmetic},
+        {"test_parser_error_recovery", test_parser_error_recovery},
+        {"test_parser_edge_cases", test_parser_edge_cases},
+        {"test_semantic_type_coercion", test_semantic_type_coercion},
+        {"test_semantic_scope_nesting", test_semantic_scope_nesting},
+        {"test_semantic_variable_shadowing", test_semantic_variable_shadowing},
+        {"test_semantic_function_signature_matching", test_semantic_function_signature_matching},
+        {"test_semantic_list_type_checking", test_semantic_list_type_checking},
+        {"test_semantic_control_flow_type_checking", test_semantic_control_flow_type_checking},
+        {"test_semantic_switch_type_checking", test_semantic_switch_type_checking},
+        {"test_semantic_arithmetic_type_promotion", test_semantic_arithmetic_type_promotion},
+        {"test_semantic_error_detection", test_semantic_error_detection},
+        {"test_semantic_return_type_checking", test_semantic_return_type_checking},
+        {"test_semantic_complex_expressions", test_semantic_complex_expressions},
+        {"test_semantic_list_operations_type_safety", test_semantic_list_operations_type_safety},
+        {"test_codegen_control_flow_comprehensive", test_codegen_control_flow_comprehensive},
+        {"test_codegen_switch_statement", test_codegen_switch_statement},
+        {"test_codegen_function_calls", test_codegen_function_calls},
+        {"test_codegen_global_variables_comprehensive", test_codegen_global_variables_comprehensive},
+        {"test_codegen_list_operations", test_codegen_list_operations},
+        {"test_codegen_arithmetic_operations", test_codegen_arithmetic_operations},
+        {"test_codegen_float_operations_comprehensive", test_codegen_float_operations_comprehensive},
+        {"test_codegen_boolean_operations", test_codegen_boolean_operations},
+        {"test_codegen_comparison_operations", test_codegen_comparison_operations},
+        {"test_codegen_string_operations", test_codegen_string_operations},
+        {"test_codegen_increment_operators", test_codegen_increment_operators},
+        {"test_codegen_complex_expressions", test_codegen_complex_expressions},
+        {"test_codegen_recursive_functions", test_codegen_recursive_functions},
+        {"test_codegen_memory_management", test_codegen_memory_management},
+        {"test_runtime_list_creation", test_runtime_list_creation},
+        {"test_runtime_list_push_pop", test_runtime_list_push_pop},
+        {"test_runtime_list_get", test_runtime_list_get},
+        {"test_runtime_list_size", test_runtime_list_size},
+        {"test_runtime_list_different_types", test_runtime_list_different_types},
+        {"test_runtime_list_bounds_checking", test_runtime_list_bounds_checking},
+        {"test_runtime_list_pop_empty", test_runtime_list_pop_empty},
+        {"test_runtime_memory_management", test_runtime_memory_management},
+        {"test_runtime_list_resize", test_runtime_list_resize},
+        {"test_runtime_print_functions", test_runtime_print_functions},
+        {"test_runtime_string_operations", test_runtime_string_operations},
+        {"test_runtime_memory_allocation", test_runtime_memory_allocation},
         {"test_diagnostics", test_diagnostics}
     };
     

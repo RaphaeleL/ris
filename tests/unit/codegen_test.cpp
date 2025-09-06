@@ -144,9 +144,6 @@ int test_codegen_string_literals() {
     ASSERT_TRUE(compile_code(code, output_file));
     ASSERT_TRUE(check_file_contains(output_file, "hello"));
     
-    // Temporarily force a failure to test colors
-    ASSERT_TRUE(false);
-    
     return 0;
 }
 

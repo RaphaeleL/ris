@@ -244,4 +244,250 @@ int test_lexer_escape_sequences() {
     return 0;
 }
 
+// Additional comprehensive lexer tests
+int test_lexer_all_keywords() {
+    std::cout << "Running test_lexer_all_keywords .........";
+    
+    std::string all_keywords = "int float bool char string void list if else while for switch case default break continue return true false";
+    ris::Lexer lexer(all_keywords);
+    auto tokens = lexer.tokenize();
+    
+    ASSERT_EQ(18, tokens.size()); // 17 keywords + EOF
+    
+    std::vector<ris::TokenType> expected_types = {
+        ris::TokenType::INT, ris::TokenType::FLOAT, ris::TokenType::BOOL, ris::TokenType::CHAR,
+        ris::TokenType::STRING, ris::TokenType::VOID, ris::TokenType::LIST, ris::TokenType::IF,
+        ris::TokenType::ELSE, ris::TokenType::WHILE, ris::TokenType::FOR, ris::TokenType::SWITCH,
+        ris::TokenType::CASE, ris::TokenType::DEFAULT, ris::TokenType::BREAK, ris::TokenType::CONTINUE,
+        ris::TokenType::RETURN, ris::TokenType::TRUE, ris::TokenType::FALSE
+    };
+    
+    for (size_t i = 0; i < expected_types.size(); ++i) {
+        ASSERT_EQ(expected_types[i], tokens[i].type);
+    }
+    
+    std::cout << " OK" << std::endl;
+    return 0;
+}
+
+int test_lexer_all_operators() {
+    std::cout << "Running test_lexer_all_operators .........";
+    
+    std::string all_operators = "+ - * / % == != < > <= >= && || ! = ++";
+    ris::Lexer lexer(all_operators);
+    auto tokens = lexer.tokenize();
+    
+    ASSERT_EQ(15, tokens.size()); // 14 operators + EOF
+    
+    std::vector<ris::TokenType> expected_types = {
+        ris::TokenType::PLUS, ris::TokenType::MINUS, ris::TokenType::MULTIPLY, ris::TokenType::DIVIDE,
+        ris::TokenType::MODULO, ris::TokenType::EQUAL, ris::TokenType::NOT_EQUAL, ris::TokenType::LESS,
+        ris::TokenType::GREATER, ris::TokenType::LESS_EQUAL, ris::TokenType::GREATER_EQUAL,
+        ris::TokenType::AND, ris::TokenType::OR, ris::TokenType::NOT, ris::TokenType::ASSIGN,
+        ris::TokenType::INCREMENT
+    };
+    
+    for (size_t i = 0; i < expected_types.size(); ++i) {
+        ASSERT_EQ(expected_types[i], tokens[i].type);
+    }
+    
+    std::cout << " OK" << std::endl;
+    return 0;
+}
+
+int test_lexer_all_punctuation() {
+    std::cout << "Running test_lexer_all_punctuation .........";
+    
+    std::string all_punctuation = "; , . : ( ) { } [ ]";
+    ris::Lexer lexer(all_punctuation);
+    auto tokens = lexer.tokenize();
+    
+    ASSERT_EQ(11, tokens.size()); // 10 punctuation + EOF
+    
+    std::vector<ris::TokenType> expected_types = {
+        ris::TokenType::SEMICOLON, ris::TokenType::COMMA, ris::TokenType::DOT, ris::TokenType::COLON,
+        ris::TokenType::LEFT_PAREN, ris::TokenType::RIGHT_PAREN, ris::TokenType::LEFT_BRACE,
+        ris::TokenType::RIGHT_BRACE, ris::TokenType::LEFT_BRACKET, ris::TokenType::RIGHT_BRACKET
+    };
+    
+    for (size_t i = 0; i < expected_types.size(); ++i) {
+        ASSERT_EQ(expected_types[i], tokens[i].type);
+    }
+    
+    std::cout << " OK" << std::endl;
+    return 0;
+}
+
+int test_lexer_numeric_literals() {
+    std::cout << "Running test_lexer_numeric_literals .........";
+    
+    ris::Lexer lexer("42 3.14 0x1A 0b1010 1e5 2.5e-3");
+    auto tokens = lexer.tokenize();
+    
+    ASSERT_EQ(7, tokens.size()); // 6 literals + EOF
+    
+    ASSERT_EQ(ris::TokenType::INTEGER_LITERAL, tokens[0].type);
+    ASSERT_EQ("42", tokens[0].value);
+    
+    ASSERT_EQ(ris::TokenType::FLOAT_LITERAL, tokens[1].type);
+    ASSERT_EQ("3.14", tokens[1].value);
+    
+    ASSERT_EQ(ris::TokenType::INTEGER_LITERAL, tokens[2].type);
+    ASSERT_EQ("0x1A", tokens[2].value);
+    
+    ASSERT_EQ(ris::TokenType::INTEGER_LITERAL, tokens[3].type);
+    ASSERT_EQ("0b1010", tokens[3].value);
+    
+    ASSERT_EQ(ris::TokenType::FLOAT_LITERAL, tokens[4].type);
+    ASSERT_EQ("1e5", tokens[4].value);
+    
+    ASSERT_EQ(ris::TokenType::FLOAT_LITERAL, tokens[5].type);
+    ASSERT_EQ("2.5e-3", tokens[5].value);
+    
+    std::cout << " OK" << std::endl;
+    return 0;
+}
+
+int test_lexer_string_variations() {
+    std::cout << "Running test_lexer_string_variations .........";
+    
+    ris::Lexer lexer(R"("hello" 'a' "escaped\"quote" '\\' "multiline\nstring")");
+    auto tokens = lexer.tokenize();
+    
+    ASSERT_EQ(6, tokens.size()); // 5 literals + EOF
+    
+    ASSERT_EQ(ris::TokenType::STRING_LITERAL, tokens[0].type);
+    ASSERT_EQ("hello", tokens[0].value);
+    
+    ASSERT_EQ(ris::TokenType::CHAR_LITERAL, tokens[1].type);
+    ASSERT_EQ("a", tokens[1].value);
+    
+    ASSERT_EQ(ris::TokenType::STRING_LITERAL, tokens[2].type);
+    ASSERT_EQ("escaped\"quote", tokens[2].value);
+    
+    ASSERT_EQ(ris::TokenType::CHAR_LITERAL, tokens[3].type);
+    ASSERT_EQ("\\", tokens[3].value);
+    
+    ASSERT_EQ(ris::TokenType::STRING_LITERAL, tokens[4].type);
+    ASSERT_EQ("multiline\nstring", tokens[4].value);
+    
+    std::cout << " OK" << std::endl;
+    return 0;
+}
+
+int test_lexer_identifiers_edge_cases() {
+    std::cout << "Running test_lexer_identifiers_edge_cases .........";
+    
+    ris::Lexer lexer("_underscore _123 camelCase snake_case UPPERCASE mixed123Case");
+    auto tokens = lexer.tokenize();
+    
+    ASSERT_EQ(7, tokens.size()); // 6 identifiers + EOF
+    
+    for (int i = 0; i < 6; ++i) {
+        ASSERT_EQ(ris::TokenType::IDENTIFIER, tokens[i].type);
+    }
+    
+    ASSERT_EQ("_underscore", tokens[0].value);
+    ASSERT_EQ("_123", tokens[1].value);
+    ASSERT_EQ("camelCase", tokens[2].value);
+    ASSERT_EQ("snake_case", tokens[3].value);
+    ASSERT_EQ("UPPERCASE", tokens[4].value);
+    ASSERT_EQ("mixed123Case", tokens[5].value);
+    
+    std::cout << " OK" << std::endl;
+    return 0;
+}
+
+int test_lexer_comments_comprehensive() {
+    std::cout << "Running test_lexer_comments_comprehensive .........";
+    
+    std::string code = R"(
+        // Single line comment
+        int x = 5; // Inline comment
+        /* Multi-line
+           comment */
+        int y = 10;
+        /* Single line block comment */
+    )";
+    
+    ris::Lexer lexer(code);
+    auto tokens = lexer.tokenize();
+    
+    // Should only have: int, x, =, 5, ;, int, y, =, 10, ;, EOF
+    ASSERT_EQ(11, tokens.size());
+    
+    ASSERT_EQ(ris::TokenType::INT, tokens[0].type);
+    ASSERT_EQ(ris::TokenType::IDENTIFIER, tokens[1].type);
+    ASSERT_EQ("x", tokens[1].value);
+    ASSERT_EQ(ris::TokenType::ASSIGN, tokens[2].type);
+    ASSERT_EQ(ris::TokenType::INTEGER_LITERAL, tokens[3].type);
+    ASSERT_EQ("5", tokens[3].value);
+    ASSERT_EQ(ris::TokenType::SEMICOLON, tokens[4].type);
+    
+    std::cout << " OK" << std::endl;
+    return 0;
+}
+
+int test_lexer_preprocessor_directives() {
+    std::cout << "Running test_lexer_preprocessor_directives .........";
+    
+    ris::Lexer lexer("#include <std>\n#include \"local.h\"");
+    auto tokens = lexer.tokenize();
+    
+    ASSERT_EQ(5, tokens.size()); // HASH, INCLUDE, SYSTEM_INCLUDE, HASH, INCLUDE, EOF
+    
+    ASSERT_EQ(ris::TokenType::HASH, tokens[0].type);
+    ASSERT_EQ(ris::TokenType::INCLUDE, tokens[1].type);
+    ASSERT_EQ(ris::TokenType::SYSTEM_INCLUDE, tokens[2].type);
+    ASSERT_EQ("std", tokens[2].value);
+    
+    std::cout << " OK" << std::endl;
+    return 0;
+}
+
+int test_lexer_error_conditions() {
+    std::cout << "Running test_lexer_error_conditions .........";
+    
+    // Test unterminated string
+    ris::Lexer lexer1("\"unterminated string");
+    auto tokens1 = lexer1.tokenize();
+    ASSERT_TRUE(lexer1.has_error());
+    
+    // Test unterminated char
+    ris::Lexer lexer2("'a");
+    auto tokens2 = lexer2.tokenize();
+    ASSERT_TRUE(lexer2.has_error());
+    
+    // Test unterminated block comment
+    ris::Lexer lexer3("/* unterminated comment");
+    auto tokens3 = lexer3.tokenize();
+    ASSERT_TRUE(lexer3.has_error());
+    
+    std::cout << " OK" << std::endl;
+    return 0;
+}
+
+int test_lexer_position_tracking() {
+    std::cout << "Running test_lexer_position_tracking .........";
+    
+    std::string code = "int x = 5;\nfloat y = 3.14;";
+    ris::Lexer lexer(code);
+    auto tokens = lexer.tokenize();
+    
+    // Check line numbers
+    ASSERT_EQ(1, tokens[0].position.line); // int
+    ASSERT_EQ(1, tokens[1].position.line); // x
+    ASSERT_EQ(1, tokens[2].position.line); // =
+    ASSERT_EQ(1, tokens[3].position.line); // 5
+    ASSERT_EQ(1, tokens[4].position.line); // ;
+    ASSERT_EQ(2, tokens[5].position.line); // float
+    ASSERT_EQ(2, tokens[6].position.line); // y
+    ASSERT_EQ(2, tokens[7].position.line); // =
+    ASSERT_EQ(2, tokens[8].position.line); // 3.14
+    ASSERT_EQ(2, tokens[9].position.line); // ;
+    
+    std::cout << " OK" << std::endl;
+    return 0;
+}
+
 // Test functions are defined above, main() is in test_runner.cpp
