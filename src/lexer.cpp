@@ -1,10 +1,12 @@
 #include "lexer.h"
 #include <cctype>
+#include <fstream>
+#include <filesystem>
 
 namespace ris {
 
-Lexer::Lexer(const std::string& source) 
-    : source_(source), current_pos_(0), current_line_(1), current_column_(1), 
+Lexer::Lexer(const std::string& source, const std::string& source_dir) 
+    : source_(source), source_dir_(source_dir), current_pos_(0), current_line_(1), current_column_(1), 
       has_error_(false), error_message_("") {
 }
 
@@ -61,6 +63,11 @@ Token Lexer::next_token() {
         return scan_punctuation();
     }
     
+    // Preprocessor directives
+    if (c == '#') {
+        return scan_preprocessor();
+    }
+    
     // Unknown character
     Token token(TokenType::UNKNOWN, std::string(1, c), current_position());
     advance();
@@ -86,10 +93,39 @@ std::vector<Token> Lexer::tokenize() {
     
     while (!is_at_end()) {
         Token token = next_token();
-        tokens.push_back(token);
         
-        if (token.type == TokenType::EOF_TOKEN) {
-            break;
+        if (token.type == TokenType::INCLUDE) {
+            // Read the included file and tokenize it
+            std::string filename = token.value;
+            std::string include_content = read_include_file(filename, source_dir_);
+            
+            if (has_error_) {
+                // Error reading include file, return empty tokens
+                return {};
+            }
+            
+            // Create a new lexer for the included content
+            Lexer include_lexer(include_content, source_dir_);
+            auto include_tokens = include_lexer.tokenize();
+            
+            if (include_lexer.has_error()) {
+                has_error_ = true;
+                error_message_ = "Error in included file " + filename + ": " + include_lexer.error_message();
+                return {};
+            }
+            
+            // Add the included tokens (excluding EOF)
+            for (const auto& include_token : include_tokens) {
+                if (include_token.type != TokenType::EOF_TOKEN) {
+                    tokens.push_back(include_token);
+                }
+            }
+        } else {
+            tokens.push_back(token);
+            
+            if (token.type == TokenType::EOF_TOKEN) {
+                break;
+            }
         }
     }
     
@@ -388,6 +424,55 @@ Token Lexer::scan_punctuation() {
     }
 }
 
+Token Lexer::scan_preprocessor() {
+    SourcePos start_pos = current_position();
+    advance(); // consume '#'
+    
+    // Skip whitespace after #
+    skip_whitespace();
+    
+    // Read the directive (include, define, etc.)
+    std::string directive;
+    while (!is_at_end() && is_alpha(current_char())) {
+        directive += advance();
+    }
+    
+    if (directive == "include") {
+        // Skip whitespace after 'include'
+        skip_whitespace();
+        
+        // Read the filename (expecting quotes)
+        if (current_char() == '"') {
+            advance(); // consume opening quote
+            std::string filename;
+            while (!is_at_end() && current_char() != '"') {
+                filename += advance();
+            }
+            if (is_at_end()) {
+                has_error_ = true;
+                error_message_ = "Unterminated include filename";
+                return Token(TokenType::UNKNOWN, "", start_pos);
+            }
+            advance(); // consume closing quote
+            
+            // Skip to end of line
+            while (!is_at_end() && current_char() != '\n') {
+                advance();
+            }
+            
+            return Token(TokenType::INCLUDE, filename, start_pos);
+        } else {
+            has_error_ = true;
+            error_message_ = "Expected quoted filename after #include";
+            return Token(TokenType::UNKNOWN, "", start_pos);
+        }
+    } else {
+        has_error_ = true;
+        error_message_ = "Unknown preprocessor directive: " + directive;
+        return Token(TokenType::UNKNOWN, directive, start_pos);
+    }
+}
+
 bool Lexer::is_alpha(char c) const {
     return std::isalpha(c) || c == '_';
 }
@@ -402,6 +487,31 @@ bool Lexer::is_alnum(char c) const {
 
 bool Lexer::is_whitespace(char c) const {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+}
+
+std::string Lexer::read_include_file(const std::string& filename, const std::string& current_dir) {
+    std::string full_path;
+    
+    // If filename starts with /, it's an absolute path
+    if (filename[0] == '/') {
+        full_path = filename;
+    } else {
+        // Relative path - combine with current directory
+        full_path = current_dir + "/" + filename;
+    }
+    
+    std::ifstream file(full_path);
+    if (!file.is_open()) {
+        has_error_ = true;
+        error_message_ = "Could not open include file: " + full_path;
+        return "";
+    }
+    
+    std::string content((std::istreambuf_iterator<char>(file)),
+                       std::istreambuf_iterator<char>());
+    file.close();
+    
+    return content;
 }
 
 } // namespace ris

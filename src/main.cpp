@@ -75,8 +75,15 @@ int main(int argc, char* argv[]) {
                       std::istreambuf_iterator<char>());
     file.close();
     
+    // Get the directory of the source file
+    std::filesystem::path input_path(input_file);
+    std::string source_dir = input_path.parent_path().string();
+    if (source_dir.empty()) {
+        source_dir = ".";
+    }
+    
     // Tokenize the source
-    ris::Lexer lexer(source);
+    ris::Lexer lexer(source, source_dir);
     auto tokens = lexer.tokenize();
     
     if (lexer.has_error()) {

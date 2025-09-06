@@ -11,7 +11,15 @@ std::unique_ptr<Program> Parser::parse() {
     auto program = std::make_unique<Program>();
     
     while (!is_at_end()) {
-        if (is_type_keyword(current_token().type)) {
+        if (current_token().type == TokenType::INCLUDE) {
+            // Handle include directive
+            std::string filename = current_token().value;
+            advance(); // consume the include token
+            
+            // For now, we'll just skip include directives in the parser
+            // The actual file inclusion will be handled in the main compilation pipeline
+            continue;
+        } else if (is_type_keyword(current_token().type)) {
             // Check if it's a function by looking ahead for '('
             size_t lookahead = current_token_;
             while (lookahead < tokens_.size() && 

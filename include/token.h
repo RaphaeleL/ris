@@ -34,6 +34,10 @@ enum class TokenType {
     LEFT_BRACE, RIGHT_BRACE,
     LEFT_BRACKET, RIGHT_BRACKET,
     
+    // Preprocessor directives
+    HASH,
+    INCLUDE,
+    
     // Special
     UNKNOWN
 };

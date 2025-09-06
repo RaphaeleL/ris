@@ -101,6 +101,7 @@ TokenType keyword_to_token_type(const std::string& keyword) {
     if (keyword == "return") return TokenType::RETURN;
     if (keyword == "true") return TokenType::TRUE;
     if (keyword == "false") return TokenType::FALSE;
+    if (keyword == "include") return TokenType::INCLUDE;
     return TokenType::IDENTIFIER;
 }
 
@@ -151,6 +152,8 @@ std::string token_type_to_string(TokenType type) {
         case TokenType::RIGHT_BRACE: return "RIGHT_BRACE";
         case TokenType::LEFT_BRACKET: return "LEFT_BRACKET";
         case TokenType::RIGHT_BRACKET: return "RIGHT_BRACKET";
+        case TokenType::HASH: return "HASH";
+        case TokenType::INCLUDE: return "INCLUDE";
         case TokenType::UNKNOWN: return "UNKNOWN";
         default: return "UNKNOWN";
     }

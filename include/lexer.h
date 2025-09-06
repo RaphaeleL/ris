@@ -8,7 +8,7 @@ namespace ris {
 
 class Lexer {
 public:
-    explicit Lexer(const std::string& source);
+    explicit Lexer(const std::string& source, const std::string& source_dir = ".");
     
     // Get the next token
     Token next_token();
@@ -31,6 +31,7 @@ public:
 
 private:
     std::string source_;
+    std::string source_dir_;
     size_t current_pos_;
     size_t current_line_;
     size_t current_column_;
@@ -51,6 +52,10 @@ private:
     Token scan_string_literal();
     Token scan_operator();
     Token scan_punctuation();
+    Token scan_preprocessor();
+    
+    // File inclusion
+    std::string read_include_file(const std::string& filename, const std::string& current_dir);
     
     // Character classification
     bool is_alpha(char c) const;
