@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
         
         // Use LLVM toolchain: llc -> clang for linking
         std::string asm_output = "out/temp_output.s";
-        std::string runtime_lib = "runtime/libris_runtime.a";
+        std::string runtime_lib = "runtime/std.a";
         std::string final_output = output_file;
         
         #ifdef _WIN32

@@ -29,7 +29,7 @@ TEST_RUNNER     = $(TEST_DIR)/unit/test_runner.cpp
 # Main targets
 TARGET      = $(BIN_DIR)/risc
 TEST_TARGET = $(BIN_DIR)/risc_test
-RUNTIME_LIB = $(RUNTIME_DIR)/libris_runtime.a
+RUNTIME_LIB = $(RUNTIME_DIR)/std.a
 
 # Test object files
 TEST_OBJECTS    = $(UNIT_TESTS:$(TEST_DIR)/unit/%_test.cpp=$(BUILD_DIR)/%_test.o)
@@ -56,7 +56,7 @@ $(BIN_DIR):
 	@mkdir -p $@
 
 # Runtime library
-$(RUNTIME_LIB): $(BUILD_DIR)/runtime.o | $(RUNTIME_DIR)
+$(RUNTIME_LIB): $(BUILD_DIR)/std.o | $(RUNTIME_DIR)
 	$(ECHO_AR)
 	@ar rcs $@ $^
 
