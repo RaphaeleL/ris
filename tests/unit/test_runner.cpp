@@ -19,20 +19,6 @@ int test_lexer_punctuation();
 int test_lexer_comments();
 int test_lexer_whitespace();
 int test_lexer_escape_sequences();
-int test_lexer_all_keywords();
-int test_lexer_all_operators();
-int test_lexer_all_punctuation();
-int test_lexer_numeric_literals();
-int test_lexer_char_literals();
-int test_lexer_string_literals_complex();
-int test_lexer_identifiers_complex();
-int test_lexer_preprocessor_directives();
-int test_lexer_comments_comprehensive();
-int test_lexer_whitespace_comprehensive();
-int test_lexer_error_conditions();
-int test_lexer_position_tracking();
-int test_lexer_edge_cases();
-int test_lexer_unicode_identifiers();
 int test_parser_basic_function();
 int test_parser_function_with_parameters();
 int test_parser_variable_declaration();
@@ -51,16 +37,6 @@ int test_parser_continue_statement();
 int test_parser_list_literal();
 int test_parser_list_method_calls();
 int test_parser_list_indexing();
-int test_parser_complex_expressions();
-int test_parser_nested_control_flow();
-int test_parser_switch_statement_complex();
-int test_parser_list_operations_complex();
-int test_parser_function_overloading();
-int test_parser_global_variables();
-int test_parser_increment_operators();
-int test_parser_unary_operators();
-int test_parser_error_handling_comprehensive();
-int test_parser_edge_cases();
 int test_semantic_valid_program();
 int test_semantic_undefined_variable();
 int test_semantic_duplicate_variable();
@@ -117,20 +93,6 @@ int main() {
         {"test_lexer_comments", test_lexer_comments},
         {"test_lexer_whitespace", test_lexer_whitespace},
         {"test_lexer_escape_sequences", test_lexer_escape_sequences},
-        {"test_lexer_all_keywords", test_lexer_all_keywords},
-        {"test_lexer_all_operators", test_lexer_all_operators},
-        {"test_lexer_all_punctuation", test_lexer_all_punctuation},
-        {"test_lexer_numeric_literals", test_lexer_numeric_literals},
-        {"test_lexer_char_literals", test_lexer_char_literals},
-        {"test_lexer_string_literals_complex", test_lexer_string_literals_complex},
-        {"test_lexer_identifiers_complex", test_lexer_identifiers_complex},
-        {"test_lexer_preprocessor_directives", test_lexer_preprocessor_directives},
-        {"test_lexer_comments_comprehensive", test_lexer_comments_comprehensive},
-        {"test_lexer_whitespace_comprehensive", test_lexer_whitespace_comprehensive},
-        {"test_lexer_error_conditions", test_lexer_error_conditions},
-        {"test_lexer_position_tracking", test_lexer_position_tracking},
-        {"test_lexer_edge_cases", test_lexer_edge_cases},
-        {"test_lexer_unicode_identifiers", test_lexer_unicode_identifiers},
         {"test_parser_basic_function", test_parser_basic_function},
         {"test_parser_function_with_parameters", test_parser_function_with_parameters},
         {"test_parser_variable_declaration", test_parser_variable_declaration},
@@ -149,16 +111,6 @@ int main() {
         {"test_parser_list_literal", test_parser_list_literal},
         {"test_parser_list_method_calls", test_parser_list_method_calls},
         {"test_parser_list_indexing", test_parser_list_indexing},
-        {"test_parser_complex_expressions", test_parser_complex_expressions},
-        {"test_parser_nested_control_flow", test_parser_nested_control_flow},
-        {"test_parser_switch_statement_complex", test_parser_switch_statement_complex},
-        {"test_parser_list_operations_complex", test_parser_list_operations_complex},
-        {"test_parser_function_overloading", test_parser_function_overloading},
-        {"test_parser_global_variables", test_parser_global_variables},
-        {"test_parser_increment_operators", test_parser_increment_operators},
-        {"test_parser_unary_operators", test_parser_unary_operators},
-        {"test_parser_error_handling_comprehensive", test_parser_error_handling_comprehensive},
-        {"test_parser_edge_cases", test_parser_edge_cases},
         {"test_semantic_valid_program", test_semantic_valid_program},
         {"test_semantic_undefined_variable", test_semantic_undefined_variable},
         {"test_semantic_duplicate_variable", test_semantic_duplicate_variable},

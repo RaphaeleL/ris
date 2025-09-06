@@ -1486,12 +1486,10 @@ llvm::Value* CodeGenerator::generate_list_method_call_expression(ListMethodCallE
             // For variable references, use heuristic based on variable name
             std::string var_name = identifier->name;
             if (var_name.find("nested") != std::string::npos || 
-                var_name.find("matrix") != std::string::npos ||
-                var_name == "a" ||  // Common variable name for nested lists
-                var_name.length() == 1) {  // Single letter variables often used for nested lists
+                var_name.find("matrix") != std::string::npos) {
                 element_type = TYPE_LIST;
             } else {
-                element_type = TYPE_INT; // Default for simple lists
+                element_type = TYPE_INT; // Default for simple lists (most common case)
             }
         } else {
             // For other expressions, assume it's a list for nested lists
