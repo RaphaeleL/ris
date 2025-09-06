@@ -1,3 +1,4 @@
+#include <std>
 int main() {
     int x = -1;
     int result = 0;

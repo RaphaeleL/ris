@@ -1,3 +1,4 @@
+#include <std>
 // Test multi-argument print functions
 int main() {
     // Test print with multiple arguments

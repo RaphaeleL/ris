@@ -1,3 +1,4 @@
+#include <std>
 int add(int a, int b, bool verbose) {
     if (verbose) {
         println(a, " + ", b, " = ", a + b);

@@ -1,3 +1,4 @@
+#include <std>
 int main() {
     int x = 10;
     int sum = 0;

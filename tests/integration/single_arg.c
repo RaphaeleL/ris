@@ -1,3 +1,4 @@
+#include <std>
 // Test single argument
 int main() {
     print("Hello");

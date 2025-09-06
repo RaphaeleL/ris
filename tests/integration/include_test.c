@@ -1,3 +1,4 @@
+#include <std>
 #include "math.c"
 
 int main() {

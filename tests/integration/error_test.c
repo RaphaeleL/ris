@@ -1,3 +1,4 @@
+#include <std>
 int main() {
     // Test undefined variable error
     int x = y;  // y is not defined

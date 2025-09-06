@@ -1,3 +1,4 @@
+#include <std>
 int sum(list<int> a) {
     int sum = 0;
     for (int i = 0; i < a.size(); i++) {

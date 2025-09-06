@@ -1,3 +1,4 @@
+#include <std>
 int main() {
     println("Foo, World!");
     print(42);

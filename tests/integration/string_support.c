@@ -1,3 +1,4 @@
+#include <std>
 int main() {
     // Test string literals and printing
     println("Hello", "World");

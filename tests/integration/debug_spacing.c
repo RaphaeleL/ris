@@ -1,3 +1,4 @@
+#include <std>
 // Debug spacing
 int main() {
     print("A", "B");

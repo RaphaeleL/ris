@@ -1,3 +1,4 @@
+#include <std>
 int main() {
     list<bool> a = [true, false, true];
     println(a);

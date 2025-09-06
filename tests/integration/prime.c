@@ -1,3 +1,4 @@
+#include <std>
 // Helper function to check if a number is prime
 bool is_prime(int n) {
     if (n < 2) {

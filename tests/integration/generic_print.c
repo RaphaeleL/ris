@@ -1,3 +1,4 @@
+#include <std>
 // Test generic print function (like Python's print)
 int main() {
     // Test print with different types

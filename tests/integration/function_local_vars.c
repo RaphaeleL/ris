@@ -1,3 +1,4 @@
+#include <std>
 int factorial(int n) {
     int result = 1;
     int i = 1;

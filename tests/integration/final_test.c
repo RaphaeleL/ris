@@ -1,3 +1,4 @@
+#include <std>
 // Test the final spacing behavior
 int main() {
     print("Hello", "World", "!");

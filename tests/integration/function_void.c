@@ -1,3 +1,4 @@
+#include <std>
 void print_hello() {
     println("Hello, World!");
 }

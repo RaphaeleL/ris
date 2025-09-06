@@ -1,3 +1,4 @@
+#include <std>
 // Test automatic spacing in print functions
 int main() {
     print("Hello", "World", "!");
