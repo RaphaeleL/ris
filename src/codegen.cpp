@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 namespace ris {
 
@@ -1252,7 +1253,9 @@ llvm::Value* CodeGenerator::generate_list_literal_expression(ListLiteralExpr& ex
     
     // Create the list
     auto element_type_val = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context_), element_type);
-    auto capacity_val = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), expr.elements.size());
+    // Ensure minimum capacity of 4 for empty lists
+    size_t initial_capacity = std::max(expr.elements.size(), size_t(4));
+    auto capacity_val = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), initial_capacity);
     
     auto list_ptr = builder_->CreateCall(list_create_func->second, {element_type_val, capacity_val});
     
@@ -1268,22 +1271,50 @@ llvm::Value* CodeGenerator::generate_list_literal_expression(ListLiteralExpr& ex
         llvm::Value* element_ptr = nullptr;
         switch (element_type) {
             case TYPE_INT: {
-                element_ptr = builder_->CreateAlloca(llvm::Type::getInt64Ty(*context_));
+                // Allocate heap memory for integer
+                auto malloc_func = functions_.find("ris_malloc");
+                if (malloc_func == functions_.end()) {
+                    error("ris_malloc function not found");
+                    return nullptr;
+                }
+                auto size_val = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), module_->getDataLayout().getTypeAllocSize(llvm::Type::getInt64Ty(*context_)));
+                element_ptr = builder_->CreateCall(malloc_func->second, {size_val});
                 builder_->CreateStore(element_val, element_ptr);
                 break;
             }
             case TYPE_FLOAT: {
-                element_ptr = builder_->CreateAlloca(llvm::Type::getDoubleTy(*context_));
+                // Allocate heap memory for float
+                auto malloc_func = functions_.find("ris_malloc");
+                if (malloc_func == functions_.end()) {
+                    error("ris_malloc function not found");
+                    return nullptr;
+                }
+                auto size_val = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), module_->getDataLayout().getTypeAllocSize(llvm::Type::getDoubleTy(*context_)));
+                element_ptr = builder_->CreateCall(malloc_func->second, {size_val});
                 builder_->CreateStore(element_val, element_ptr);
                 break;
             }
             case TYPE_BOOL: {
-                element_ptr = builder_->CreateAlloca(llvm::Type::getInt8Ty(*context_));
+                // Allocate heap memory for bool
+                auto malloc_func = functions_.find("ris_malloc");
+                if (malloc_func == functions_.end()) {
+                    error("ris_malloc function not found");
+                    return nullptr;
+                }
+                auto size_val = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), module_->getDataLayout().getTypeAllocSize(llvm::Type::getInt8Ty(*context_)));
+                element_ptr = builder_->CreateCall(malloc_func->second, {size_val});
                 builder_->CreateStore(element_val, element_ptr);
                 break;
             }
             case TYPE_CHAR: {
-                element_ptr = builder_->CreateAlloca(llvm::Type::getInt8Ty(*context_));
+                // Allocate heap memory for char
+                auto malloc_func = functions_.find("ris_malloc");
+                if (malloc_func == functions_.end()) {
+                    error("ris_malloc function not found");
+                    return nullptr;
+                }
+                auto size_val = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), module_->getDataLayout().getTypeAllocSize(llvm::Type::getInt8Ty(*context_)));
+                element_ptr = builder_->CreateCall(malloc_func->second, {size_val});
                 builder_->CreateStore(element_val, element_ptr);
                 break;
             }
@@ -1473,7 +1504,7 @@ llvm::Value* CodeGenerator::generate_list_method_call_expression(ListMethodCallE
             // For lists, the argument is already a pointer
             element_ptr = arg_value;
         } else {
-            // For primitive types, allocate space and store the value
+            // For primitive types, allocate heap memory and store the value
             llvm::Type* element_llvm_type;
             switch (element_type) {
                 case TYPE_INT:
@@ -1493,7 +1524,16 @@ llvm::Value* CodeGenerator::generate_list_method_call_expression(ListMethodCallE
                     element_llvm_type = llvm::Type::getInt64Ty(*context_);
                     break;
             }
-            element_ptr = builder_->CreateAlloca(element_llvm_type);
+            
+            // Allocate heap memory using ris_malloc
+            auto malloc_func = functions_.find("ris_malloc");
+            if (malloc_func == functions_.end()) {
+                error("ris_malloc function not found");
+                return nullptr;
+            }
+            
+            auto size_val = llvm::ConstantInt::get(llvm::Type::getInt64Ty(*context_), module_->getDataLayout().getTypeAllocSize(element_llvm_type));
+            element_ptr = builder_->CreateCall(malloc_func->second, {size_val});
             builder_->CreateStore(arg_value, element_ptr);
         }
         
