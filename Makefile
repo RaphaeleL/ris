@@ -70,8 +70,13 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp $(HEADERS) | $(BUILD_DIR)
 	$(ECHO_CC)
 	@$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
+# Test utils object file
+$(BUILD_DIR)/test_utils.o: $(TEST_DIR)/unit/test_utils.cpp $(HEADERS) | $(BUILD_DIR)
+	$(ECHO_CC)
+	@$(CXX) $(CXXFLAGS) $(LLVM_CXXFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+
 # Test executable
-$(TEST_TARGET): $(TEST_RUNNER_OBJ) $(TEST_OBJECTS) $(filter-out $(BUILD_DIR)/main.o, $(OBJECTS)) | $(BIN_DIR)
+$(TEST_TARGET): $(TEST_RUNNER_OBJ) $(TEST_OBJECTS) $(BUILD_DIR)/test_utils.o $(filter-out $(BUILD_DIR)/main.o, $(OBJECTS)) | $(BIN_DIR)
 	$(ECHO_LD)
 	@$(CXX) $(CXXFLAGS) $(LLVM_LDFLAGS) -o $@ $^ $(LLVM_LIBS)
 

@@ -1,4 +1,7 @@
 #include <iostream>
+#include <vector>
+#include <string>
+#include "test_utils.h"
 
 // Forward declarations
 int test_lexer_basic();
@@ -54,6 +57,12 @@ int test_codegen_string_literals();
 int test_codegen_error_handling();
 int test_main_basic();
 
+// Test function structure
+struct TestFunction {
+    std::string name;
+    int (*func)();
+};
+
 // Diagnostics test function
 int test_diagnostics() {
     std::cout << "Running test_diagnostics...";
@@ -69,59 +78,74 @@ int test_diagnostics() {
 int main() {
     int result = 0;
     
-    result += test_main_basic();
-    result += test_lexer_basic();
-    result += test_lexer_keywords();
-    result += test_lexer_operators();
-    result += test_lexer_literals();
-    result += test_lexer_identifiers();
-    result += test_lexer_punctuation();
-    result += test_lexer_comments();
-    result += test_lexer_whitespace();
-    result += test_lexer_escape_sequences();
-    result += test_parser_basic_function();
-    result += test_parser_function_with_parameters();
-    result += test_parser_variable_declaration();
-    result += test_parser_arithmetic_expressions();
-    result += test_parser_logical_expressions();
-    result += test_parser_if_statement();
-    result += test_parser_while_statement();
-    result += test_parser_for_statement();
-    result += test_parser_return_statement();
-    result += test_parser_function_call();
-    result += test_parser_complex_program();
-    result += test_parser_error_handling();
-    result += test_parser_switch_statement();
-    result += test_parser_break_statement();
-    result += test_parser_continue_statement();
-    result += test_parser_list_literal();
-    result += test_parser_list_method_calls();
-    result += test_parser_list_indexing();
-    result += test_semantic_valid_program();
-    result += test_semantic_undefined_variable();
-    result += test_semantic_duplicate_variable();
-    result += test_semantic_type_mismatch();
-    result += test_semantic_arithmetic_operations();
-    result += test_semantic_boolean_operations();
-    result += test_semantic_comparison_operations();
-    result += test_semantic_function_calls();
-    result += test_semantic_wrong_argument_count();
-    result += test_semantic_undefined_function();
-    result += test_semantic_control_flow();
-    result += test_semantic_scope_handling();
-    result += test_semantic_implicit_conversions();
+    // Define all tests
+    std::vector<TestFunction> tests = {
+        {"test_main_basic", test_main_basic},
+        {"test_lexer_basic", test_lexer_basic},
+        {"test_lexer_keywords", test_lexer_keywords},
+        {"test_lexer_operators", test_lexer_operators},
+        {"test_lexer_literals", test_lexer_literals},
+        {"test_lexer_identifiers", test_lexer_identifiers},
+        {"test_lexer_punctuation", test_lexer_punctuation},
+        {"test_lexer_comments", test_lexer_comments},
+        {"test_lexer_whitespace", test_lexer_whitespace},
+        {"test_lexer_escape_sequences", test_lexer_escape_sequences},
+        {"test_parser_basic_function", test_parser_basic_function},
+        {"test_parser_function_with_parameters", test_parser_function_with_parameters},
+        {"test_parser_variable_declaration", test_parser_variable_declaration},
+        {"test_parser_arithmetic_expressions", test_parser_arithmetic_expressions},
+        {"test_parser_logical_expressions", test_parser_logical_expressions},
+        {"test_parser_if_statement", test_parser_if_statement},
+        {"test_parser_while_statement", test_parser_while_statement},
+        {"test_parser_for_statement", test_parser_for_statement},
+        {"test_parser_return_statement", test_parser_return_statement},
+        {"test_parser_function_call", test_parser_function_call},
+        {"test_parser_complex_program", test_parser_complex_program},
+        {"test_parser_error_handling", test_parser_error_handling},
+        {"test_parser_switch_statement", test_parser_switch_statement},
+        {"test_parser_break_statement", test_parser_break_statement},
+        {"test_parser_continue_statement", test_parser_continue_statement},
+        {"test_parser_list_literal", test_parser_list_literal},
+        {"test_parser_list_method_calls", test_parser_list_method_calls},
+        {"test_parser_list_indexing", test_parser_list_indexing},
+        {"test_semantic_valid_program", test_semantic_valid_program},
+        {"test_semantic_undefined_variable", test_semantic_undefined_variable},
+        {"test_semantic_duplicate_variable", test_semantic_duplicate_variable},
+        {"test_semantic_type_mismatch", test_semantic_type_mismatch},
+        {"test_semantic_arithmetic_operations", test_semantic_arithmetic_operations},
+        {"test_semantic_boolean_operations", test_semantic_boolean_operations},
+        {"test_semantic_comparison_operations", test_semantic_comparison_operations},
+        {"test_semantic_function_calls", test_semantic_function_calls},
+        {"test_semantic_wrong_argument_count", test_semantic_wrong_argument_count},
+        {"test_semantic_undefined_function", test_semantic_undefined_function},
+        {"test_semantic_control_flow", test_semantic_control_flow},
+        {"test_semantic_scope_handling", test_semantic_scope_handling},
+        {"test_semantic_implicit_conversions", test_semantic_implicit_conversions},
+        {"test_codegen_basic_function", test_codegen_basic_function},
+        {"test_codegen_void_function", test_codegen_void_function},
+        {"test_codegen_function_with_parameters", test_codegen_function_with_parameters},
+        {"test_codegen_global_variables", test_codegen_global_variables},
+        {"test_codegen_arithmetic_expressions", test_codegen_arithmetic_expressions},
+        {"test_codegen_boolean_literals", test_codegen_boolean_literals},
+        {"test_codegen_float_operations", test_codegen_float_operations},
+        {"test_codegen_string_literals", test_codegen_string_literals},
+        {"test_codegen_error_handling", test_codegen_error_handling},
+        {"test_diagnostics", test_diagnostics}
+    };
     
-    // Code generator tests
-    result += test_codegen_basic_function();
-    result += test_codegen_void_function();
-    result += test_codegen_function_with_parameters();
-    result += test_codegen_global_variables();
-    result += test_codegen_arithmetic_expressions();
-    result += test_codegen_boolean_literals();
-    result += test_codegen_float_operations();
-    result += test_codegen_string_literals();
-    result += test_codegen_error_handling();
-    result += test_diagnostics();
+    // Calculate maximum test name length
+    std::vector<std::string> test_names;
+    for (const auto& test : tests) {
+        test_names.push_back(test.name);
+    }
+    size_t max_length = test_utils::get_max_test_name_length(test_names);
+    test_utils::g_max_test_name_length = max_length;
+    
+    // Run all tests
+    for (const auto& test : tests) {
+        int test_result = test.func();
+        result += test_result;
+    }
     
     if (result == 0) {
         std::cout << "All tests passed!" << std::endl;

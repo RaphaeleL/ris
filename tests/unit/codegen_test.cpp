@@ -5,11 +5,12 @@
 #include "parser.h"
 #include "semantic_analyzer.h"
 #include "codegen.h"
+#include "test_utils.h"
 
 #define ASSERT_TRUE(condition) \
     do { \
         if (!(condition)) { \
-            std::cerr << "FAIL: " #condition " is false at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            std::cerr << " FAIL  " #condition " is false at " << __FILE__ << ":" << __LINE__ << std::endl; \
             return 1; \
         } \
     } while (0)
@@ -17,7 +18,7 @@
 #define ASSERT_FALSE(condition) \
     do { \
         if (condition) { \
-            std::cerr << "FAIL: " #condition " is true at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            std::cerr << " FAIL  " #condition " is true at " << __FILE__ << ":" << __LINE__ << std::endl; \
             return 1; \
         } \
     } while (0)
@@ -111,7 +112,7 @@ int test_codegen_global_variables() {
 }
 
 int test_codegen_arithmetic_expressions() {
-    std::cout << "Running test_codegen_arithmetic_expressions .........";
+    PRINT_TEST_START("test_codegen_arithmetic_expressions");
     
     std::string code = "int main() { return 2 + 3; }";
     std::string output_file;
@@ -120,12 +121,12 @@ int test_codegen_arithmetic_expressions() {
     // LLVM might constant fold 2 + 3 to 5, so check for the result or the operation
     ASSERT_TRUE(check_file_contains(output_file, "ret i64 5") || check_file_contains(output_file, "add"));
     
-    std::cout << " OK" << std::endl;
+    PRINT_TEST_SUCCESS();
     return 0;
 }
 
 int test_codegen_boolean_literals() {
-    std::cout << "Running test_codegen_boolean_literals .........";
+    PRINT_TEST_START("test_codegen_boolean_literals");
     
     std::string code = "bool main() { return true; }";
     std::string output_file;
@@ -134,12 +135,12 @@ int test_codegen_boolean_literals() {
     ASSERT_TRUE(check_file_contains(output_file, "define i8 @main()"));
     ASSERT_TRUE(check_file_contains(output_file, "ret i8 1"));
     
-    std::cout << " OK" << std::endl;
+    PRINT_TEST_SUCCESS();
     return 0;
 }
 
 int test_codegen_float_operations() {
-    std::cout << "Running test_codegen_float_operations .........";
+    PRINT_TEST_START("test_codegen_float_operations");
     
     std::string code = "float main() { return 3.14; }";
     std::string output_file;
@@ -148,20 +149,20 @@ int test_codegen_float_operations() {
     ASSERT_TRUE(check_file_contains(output_file, "define double @main()"));
     ASSERT_TRUE(check_file_contains(output_file, "ret double"));
     
-    std::cout << " OK" << std::endl;
+    PRINT_TEST_SUCCESS();
     return 0;
 }
 
 int test_codegen_string_literals() {
-    std::cout << "Running test_codegen_string_literals .........";
+    PRINT_TEST_START("test_codegen_string_literals");
     
-    std::string code = R"(string main() { return "hello"; })";
+    std::string code = R"(string main() { return "hllo"; })";
     std::string output_file;
     
     ASSERT_TRUE(compile_code(code, output_file));
     ASSERT_TRUE(check_file_contains(output_file, "hello"));
     
-    std::cout << " OK" << std::endl;
+    PRINT_TEST_SUCCESS();
     return 0;
 }
 

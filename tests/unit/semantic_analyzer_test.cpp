@@ -8,7 +8,7 @@
 #define ASSERT_EQ(expected, actual) \
     do { \
         if ((expected) != (actual)) { \
-            std::cerr << "FAIL: " << #expected << " != " << #actual << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            std::cerr << " FAIL  " << #expected << " != " << #actual << " at " << __FILE__ << ":" << __LINE__ << std::endl; \
             return 1; \
         } \
     } while(0)
@@ -16,7 +16,7 @@
 #define ASSERT_TRUE(condition) \
     do { \
         if (!(condition)) { \
-            std::cerr << "FAIL: " << #condition << " is false at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            std::cerr << " FAIL  " << #condition << " is false at " << __FILE__ << ":" << __LINE__ << std::endl; \
             return 1; \
         } \
     } while(0)
@@ -24,7 +24,7 @@
 #define ASSERT_FALSE(condition) \
     do { \
         if (condition) { \
-            std::cerr << "FAIL: " << #condition << " is true at " << __FILE__ << ":" << __LINE__ << std::endl; \
+            std::cerr << " FAIL  " << #condition << " is true at " << __FILE__ << ":" << __LINE__ << std::endl; \
             return 1; \
         } \
     } while(0)
