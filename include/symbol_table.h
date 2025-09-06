@@ -43,20 +43,15 @@ protected:
 class VariableSymbol : public Symbol {
 public:
     VariableSymbol(const std::string& name, std::unique_ptr<Type> type, 
-                   const SourcePos& position, bool is_array = false, int array_size = -1)
-        : Symbol(name, Kind::VARIABLE, position), type_(std::move(type)), 
-          is_array_(is_array), array_size_(array_size) {}
+                   const SourcePos& position)
+        : Symbol(name, Kind::VARIABLE, position), type_(std::move(type)) {}
     
     const Type& type() const { return *type_; }
-    bool is_array() const { return is_array_; }
-    int array_size() const { return array_size_; }
     
     std::string to_string() const override;
 
 private:
     std::unique_ptr<Type> type_;
-    bool is_array_;
-    int array_size_;
 };
 
 // Function symbol

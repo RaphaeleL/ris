@@ -57,7 +57,7 @@ Token Lexer::next_token() {
     }
     
     // Punctuation
-    if (c == ';' || c == ',' || c == '.' ||
+    if (c == ';' || c == ',' || c == '.' || c == ':' ||
         c == '(' || c == ')' || c == '{' || c == '}' ||
         c == '[' || c == ']') {
         return scan_punctuation();
@@ -308,6 +308,10 @@ Token Lexer::scan_operator() {
     switch (c) {
         case '+':
             advance();
+            if (current_char() == '+') {
+                advance();
+                return Token(TokenType::INCREMENT, "++", start_pos);
+            }
             return Token(TokenType::PLUS, "+", start_pos);
             
         case '-':
@@ -417,6 +421,9 @@ Token Lexer::scan_punctuation() {
         case ']':
             advance();
             return Token(TokenType::RIGHT_BRACKET, "]", start_pos);
+        case ':':
+            advance();
+            return Token(TokenType::COLON, ":", start_pos);
         default:
             has_error_ = true;
             error_message_ = "Unexpected character in punctuation scan";

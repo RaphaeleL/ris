@@ -29,7 +29,7 @@
     } while(0)
 
 int test_lexer_basic() {
-    std::cout << "Running test_lexer_basic..." << std::endl;
+    std::cout << "Running test_lexer_basic .........";
     
     ris::Lexer lexer("int main() { return 42; }");
     auto tokens = lexer.tokenize();
@@ -47,12 +47,12 @@ int test_lexer_basic() {
     ASSERT_EQ(ris::TokenType::SEMICOLON, tokens[7].type);
     ASSERT_EQ(ris::TokenType::RIGHT_BRACE, tokens[8].type);
     
-    std::cout << "✓ test_lexer_basic passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_lexer_keywords() {
-    std::cout << "Running test_lexer_keywords..." << std::endl;
+    std::cout << "Running test_lexer_keywords .........";
     
     ris::Lexer lexer("int float bool char string if else while for break continue return true false");
     auto tokens = lexer.tokenize();
@@ -70,12 +70,12 @@ int test_lexer_keywords() {
         ASSERT_EQ(expected_types[i], tokens[i].type);
     }
     
-    std::cout << "✓ test_lexer_keywords passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_lexer_operators() {
-    std::cout << "Running test_lexer_operators..." << std::endl;
+    std::cout << "Running test_lexer_operators .........";
     
     ris::Lexer lexer("+ - * / % == != < > <= >= && || ! =");
     auto tokens = lexer.tokenize();
@@ -93,12 +93,12 @@ int test_lexer_operators() {
         ASSERT_EQ(expected_types[i], tokens[i].type);
     }
     
-    std::cout << "✓ test_lexer_operators passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_lexer_literals() {
-    std::cout << "Running test_lexer_literals..." << std::endl;
+    std::cout << "Running test_lexer_literals .........";
     
     ris::Lexer lexer("123 3.14 'a' \"hello\"");
     auto tokens = lexer.tokenize();
@@ -117,12 +117,12 @@ int test_lexer_literals() {
     ASSERT_EQ(ris::TokenType::STRING_LITERAL, tokens[3].type);
     ASSERT_EQ("hello", tokens[3].value);
     
-    std::cout << "✓ test_lexer_literals passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_lexer_identifiers() {
-    std::cout << "Running test_lexer_identifiers..." << std::endl;
+    std::cout << "Running test_lexer_identifiers .........";
     
     ris::Lexer lexer("variable_name _underscore var123");
     auto tokens = lexer.tokenize();
@@ -138,12 +138,12 @@ int test_lexer_identifiers() {
     ASSERT_EQ(ris::TokenType::IDENTIFIER, tokens[2].type);
     ASSERT_EQ("var123", tokens[2].value);
     
-    std::cout << "✓ test_lexer_identifiers passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_lexer_punctuation() {
-    std::cout << "Running test_lexer_punctuation..." << std::endl;
+    std::cout << "Running test_lexer_punctuation .........";
     
     ris::Lexer lexer("; , . ( ) { } [ ]");
     auto tokens = lexer.tokenize();
@@ -161,12 +161,12 @@ int test_lexer_punctuation() {
         ASSERT_EQ(expected_types[i], tokens[i].type);
     }
     
-    std::cout << "✓ test_lexer_punctuation passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_lexer_comments() {
-    std::cout << "Running test_lexer_comments..." << std::endl;
+    std::cout << "Running test_lexer_comments .........";
     
     ris::Lexer lexer("int x; // comment\nint y; /* multi\nline */ int z;");
     auto tokens = lexer.tokenize();
@@ -187,12 +187,12 @@ int test_lexer_comments() {
     ASSERT_EQ("z", tokens[7].value);
     ASSERT_EQ(ris::TokenType::SEMICOLON, tokens[8].type);
     
-    std::cout << "✓ test_lexer_comments passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_lexer_whitespace() {
-    std::cout << "Running test_lexer_whitespace..." << std::endl;
+    std::cout << "Running test_lexer_whitespace .........";
     
     ris::Lexer lexer("  int   x  =  42  ;  ");
     auto tokens = lexer.tokenize();
@@ -207,12 +207,12 @@ int test_lexer_whitespace() {
     ASSERT_EQ("42", tokens[3].value);
     ASSERT_EQ(ris::TokenType::SEMICOLON, tokens[4].type);
     
-    std::cout << "✓ test_lexer_whitespace passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_lexer_escape_sequences() {
-    std::cout << "Running test_lexer_escape_sequences..." << std::endl;
+    std::cout << "Running test_lexer_escape_sequences .........";
     
     ris::Lexer lexer("'\\n' '\\t' '\\r' '\\\\' '\\'' '\\\"' \"hello\\nworld\"");
     auto tokens = lexer.tokenize();
@@ -240,7 +240,7 @@ int test_lexer_escape_sequences() {
     ASSERT_EQ(ris::TokenType::STRING_LITERAL, tokens[6].type);
     ASSERT_EQ("hello\nworld", tokens[6].value);
     
-    std::cout << "✓ test_lexer_escape_sequences passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 

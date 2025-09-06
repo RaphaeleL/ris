@@ -104,10 +104,38 @@ private:
     std::vector<std::unique_ptr<Type>> parameter_types_;
 };
 
+// List types
+class ListType : public Type {
+public:
+    explicit ListType(std::unique_ptr<Type> element_type) 
+        : element_type_(std::move(element_type)) {}
+    
+    const Type& element_type() const { return *element_type_; }
+    
+    std::string to_string() const override;
+    bool is_assignable_from(const Type& other) const override;
+    bool is_comparable_with(const Type& other) const override;
+    bool is_arithmetic() const override;
+    bool is_boolean() const override;
+    bool is_void() const override;
+    bool equals(const Type& other) const override;
+    
+    // List-specific methods
+    bool is_list() const { return true; }
+    
+    // Factory methods
+    static std::unique_ptr<ListType> create(std::unique_ptr<Type> element_type);
+    static std::unique_ptr<ListType> from_string(const std::string& type_name);
+
+private:
+    std::unique_ptr<Type> element_type_;
+};
+
 // Type factory functions
 std::unique_ptr<Type> create_type(const std::string& type_name);
 std::unique_ptr<Type> create_array_type(std::unique_ptr<Type> element_type, int size = -1);
 std::unique_ptr<Type> create_function_type(std::unique_ptr<Type> return_type, 
                                           std::vector<std::unique_ptr<Type>> parameter_types);
+std::unique_ptr<Type> create_list_type(std::unique_ptr<Type> element_type);
 
 } // namespace ris

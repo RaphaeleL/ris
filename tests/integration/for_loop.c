@@ -6,6 +6,10 @@ int main() {
         if (i == 3) {
             println(i);
         }
+        if (i == 2) {
+            continue;
+        }
+
     }
     
     println(sum);

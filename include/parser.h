@@ -44,6 +44,10 @@ private:
     std::unique_ptr<IfStmt> parse_if_statement();
     std::unique_ptr<WhileStmt> parse_while_statement();
     std::unique_ptr<ForStmt> parse_for_statement();
+    std::unique_ptr<SwitchStmt> parse_switch_statement();
+    std::unique_ptr<CaseStmt> parse_case_statement();
+    std::unique_ptr<BreakStmt> parse_break_statement();
+    std::unique_ptr<ContinueStmt> parse_continue_statement();
     std::unique_ptr<ReturnStmt> parse_return_statement();
     std::unique_ptr<ExprStmt> parse_expression_statement();
     std::unique_ptr<Expr> parse_expression();
@@ -57,8 +61,13 @@ private:
     std::unique_ptr<Expr> parse_unary();
     std::unique_ptr<Expr> parse_primary();
     std::unique_ptr<CallExpr> parse_call();
-    std::unique_ptr<ArrayIndexExpr> parse_array_access();
     std::unique_ptr<StructAccessExpr> parse_struct_access();
+    std::unique_ptr<ListLiteralExpr> parse_list_literal();
+    std::unique_ptr<ListIndexExpr> parse_list_index();
+    std::unique_ptr<ListMethodCallExpr> parse_list_method_call();
+    std::unique_ptr<PreIncrementExpr> parse_pre_increment();
+    std::unique_ptr<PostIncrementExpr> parse_post_increment();
+    std::string parse_type();
     
     // Utility methods
     std::string get_type_name(TokenType type);

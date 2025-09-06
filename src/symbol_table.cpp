@@ -7,13 +7,6 @@ namespace ris {
 std::string VariableSymbol::to_string() const {
     std::stringstream ss;
     ss << type_->to_string() << " " << name_;
-    if (is_array_) {
-        ss << "[";
-        if (array_size_ != -1) {
-            ss << array_size_;
-        }
-        ss << "]";
-    }
     return ss.str();
 }
 

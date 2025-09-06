@@ -30,7 +30,7 @@
     } while(0)
 
 int test_semantic_valid_program() {
-    std::cout << "Running test_semantic_valid_program..." << std::endl;
+    std::cout << "Running test_semantic_valid_program .........";
     
     ris::Lexer lexer(R"(
         int global_var = 42;
@@ -59,12 +59,12 @@ int test_semantic_valid_program() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_valid_program passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_undefined_variable() {
-    std::cout << "Running test_semantic_undefined_variable..." << std::endl;
+    std::cout << "Running test_semantic_undefined_variable .........";
     
     ris::Lexer lexer("int main() { int x = undefined_var; }");
     auto tokens = lexer.tokenize();
@@ -80,12 +80,12 @@ int test_semantic_undefined_variable() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_undefined_variable passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_duplicate_variable() {
-    std::cout << "Running test_semantic_duplicate_variable..." << std::endl;
+    std::cout << "Running test_semantic_duplicate_variable .........";
     
     ris::Lexer lexer("int main() { int x = 5; int x = 10; }");
     auto tokens = lexer.tokenize();
@@ -101,12 +101,12 @@ int test_semantic_duplicate_variable() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_duplicate_variable passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_type_mismatch() {
-    std::cout << "Running test_semantic_type_mismatch..." << std::endl;
+    std::cout << "Running test_semantic_type_mismatch .........";
     
     ris::Lexer lexer("int main() { int x = true; }");
     auto tokens = lexer.tokenize();
@@ -122,12 +122,12 @@ int test_semantic_type_mismatch() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_type_mismatch passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_arithmetic_operations() {
-    std::cout << "Running test_semantic_arithmetic_operations..." << std::endl;
+    std::cout << "Running test_semantic_arithmetic_operations .........";
     
     ris::Lexer lexer(R"(
         int main() {
@@ -154,12 +154,12 @@ int test_semantic_arithmetic_operations() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_arithmetic_operations passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_boolean_operations() {
-    std::cout << "Running test_semantic_boolean_operations..." << std::endl;
+    std::cout << "Running test_semantic_boolean_operations .........";
     
     ris::Lexer lexer(R"(
         int main() {
@@ -185,12 +185,12 @@ int test_semantic_boolean_operations() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_boolean_operations passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_comparison_operations() {
-    std::cout << "Running test_semantic_comparison_operations..." << std::endl;
+    std::cout << "Running test_semantic_comparison_operations .........";
     
     ris::Lexer lexer(R"(
         int main() {
@@ -217,12 +217,12 @@ int test_semantic_comparison_operations() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_comparison_operations passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_function_calls() {
-    std::cout << "Running test_semantic_function_calls..." << std::endl;
+    std::cout << "Running test_semantic_function_calls .........";
     
     ris::Lexer lexer(R"(
         int add(int a, int b) {
@@ -249,12 +249,12 @@ int test_semantic_function_calls() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_function_calls passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_wrong_argument_count() {
-    std::cout << "Running test_semantic_wrong_argument_count..." << std::endl;
+    std::cout << "Running test_semantic_wrong_argument_count .........";
     
     ris::Lexer lexer(R"(
         int add(int a, int b) {
@@ -280,12 +280,12 @@ int test_semantic_wrong_argument_count() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_wrong_argument_count passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_undefined_function() {
-    std::cout << "Running test_semantic_undefined_function..." << std::endl;
+    std::cout << "Running test_semantic_undefined_function .........";
     
     ris::Lexer lexer("int main() { int x = undefined_func(5); }");
     auto tokens = lexer.tokenize();
@@ -301,12 +301,12 @@ int test_semantic_undefined_function() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_undefined_function passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_control_flow() {
-    std::cout << "Running test_semantic_control_flow..." << std::endl;
+    std::cout << "Running test_semantic_control_flow .........";
     
     ris::Lexer lexer(R"(
         int main() {
@@ -342,41 +342,13 @@ int test_semantic_control_flow() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_control_flow passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
-int test_semantic_array_operations() {
-    std::cout << "Running test_semantic_array_operations..." << std::endl;
-    
-    ris::Lexer lexer(R"(
-        int main() {
-            int arr[10];
-            int x = arr[0];
-            arr[1] = 42;
-            return x;
-        }
-    )");
-    
-    auto tokens = lexer.tokenize();
-    ris::Parser parser(tokens);
-    auto program = parser.parse();
-    
-    ASSERT_FALSE(parser.has_error());
-    ASSERT_TRUE(program != nullptr);
-    
-    ris::SemanticAnalyzer analyzer;
-    bool result = analyzer.analyze(*program);
-    
-    ASSERT_TRUE(result);
-    ASSERT_FALSE(analyzer.has_error());
-    
-    std::cout << "✓ test_semantic_array_operations passed" << std::endl;
-    return 0;
-}
 
 int test_semantic_scope_handling() {
-    std::cout << "Running test_semantic_scope_handling..." << std::endl;
+    std::cout << "Running test_semantic_scope_handling .........";
     
     ris::Lexer lexer(R"(
         int main() {
@@ -403,12 +375,12 @@ int test_semantic_scope_handling() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_scope_handling passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_semantic_implicit_conversions() {
-    std::cout << "Running test_semantic_implicit_conversions..." << std::endl;
+    std::cout << "Running test_semantic_implicit_conversions .........";
     
     ris::Lexer lexer(R"(
         int main() {
@@ -433,7 +405,7 @@ int test_semantic_implicit_conversions() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << "✓ test_semantic_implicit_conversions passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 

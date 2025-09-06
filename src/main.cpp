@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include <cstdlib>
+#include <sys/wait.h>
 #include <filesystem>
 #include "lexer.h"
 #include "parser.h"
@@ -150,7 +151,7 @@ int main(int argc, char* argv[]) {
         
         // Use LLVM toolchain: llc -> clang for linking
         std::string asm_output = "out/temp_output.s";
-        std::string runtime_lib = "out/bin/libris_runtime.a";
+        std::string runtime_lib = "runtime/libris_runtime.a";
         std::string final_output = output_file;
         
         #ifdef _WIN32
@@ -204,10 +205,17 @@ int main(int argc, char* argv[]) {
             std::string run_cmd = "./" + final_output;
             int run_result = std::system(run_cmd.c_str());
             
+            // Extract the actual exit code from system() result
+            // On Unix systems, system() returns the exit code in the high byte
+            int exit_code = WEXITSTATUS(run_result);
+            
             if (verbose) {
                 std::cout << "--- End Output ---" << std::endl;
-                std::cout << "Executable exited with code: " << run_result << std::endl;
+                std::cout << "Executable exited with code: " << exit_code << std::endl;
             }
+            
+            // Exit with the same code as the executed program
+            return exit_code;
         } else {
             if (verbose) {
                 std::cout << "Run with: ./" << final_output << std::endl;

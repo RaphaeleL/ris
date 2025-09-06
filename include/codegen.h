@@ -46,6 +46,13 @@ private:
     std::map<std::string, llvm::Value*> named_values_;
     std::map<std::string, llvm::Function*> functions_;
     
+    // Control flow context for break/continue
+    struct ControlFlowContext {
+        llvm::BasicBlock* break_target;
+        llvm::BasicBlock* continue_target;
+    };
+    std::vector<ControlFlowContext> control_flow_stack_;
+    
     // Helper methods
     void error(const std::string& message);
     void error(const std::string& message, const SourcePos& position);
@@ -70,14 +77,21 @@ private:
     llvm::Value* generate_unary_expression(UnaryExpr& expr);
     llvm::Value* generate_call_expression(CallExpr& expr);
     llvm::Value* generate_generic_print_call(CallExpr& expr);
-    llvm::Value* generate_array_access_expression(ArrayIndexExpr& expr);
-    llvm::Value* generate_array_assignment(ArrayIndexExpr& expr, llvm::Value* value);
     llvm::Value* generate_struct_access_expression(StructAccessExpr& expr);
+    llvm::Value* generate_list_literal_expression(ListLiteralExpr& expr);
+    llvm::Value* generate_list_index_expression(ListIndexExpr& expr);
+    llvm::Value* generate_list_method_call_expression(ListMethodCallExpr& expr);
+    llvm::Value* generate_pre_increment_expression(PreIncrementExpr& expr);
+    llvm::Value* generate_post_increment_expression(PostIncrementExpr& expr);
     
     // Control flow generation
     void generate_if_statement(IfStmt& stmt);
     void generate_while_statement(WhileStmt& stmt);
     void generate_for_statement(ForStmt& stmt);
+    void generate_switch_statement(SwitchStmt& stmt);
+    void generate_case_statement(CaseStmt& stmt);
+    void generate_break_statement(BreakStmt& stmt);
+    void generate_continue_statement(ContinueStmt& stmt);
     void generate_return_statement(ReturnStmt& stmt);
     
     // Utility methods

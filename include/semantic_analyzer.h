@@ -58,6 +58,10 @@ private:
     void analyze_if_statement(IfStmt& stmt);
     void analyze_while_statement(WhileStmt& stmt);
     void analyze_for_statement(ForStmt& stmt);
+    void analyze_switch_statement(SwitchStmt& stmt);
+    void analyze_case_statement(CaseStmt& stmt);
+    void analyze_break_statement(BreakStmt& stmt);
+    void analyze_continue_statement(ContinueStmt& stmt);
     void analyze_return_statement(ReturnStmt& stmt);
     void analyze_expression_statement(ExprStmt& stmt);
     
@@ -66,10 +70,14 @@ private:
     void analyze_binary_expression(BinaryExpr& expr);
     void analyze_unary_expression(UnaryExpr& expr);
     void analyze_call_expression(CallExpr& expr);
-    void analyze_array_access_expression(ArrayIndexExpr& expr);
     void analyze_struct_access_expression(StructAccessExpr& expr);
     void analyze_literal_expression(LiteralExpr& expr);
     void analyze_identifier_expression(IdentifierExpr& expr);
+    void analyze_list_literal_expression(ListLiteralExpr& expr);
+    void analyze_list_index_expression(ListIndexExpr& expr);
+    void analyze_list_method_call_expression(ListMethodCallExpr& expr);
+    void analyze_pre_increment_expression(PreIncrementExpr& expr);
+    void analyze_post_increment_expression(PostIncrementExpr& expr);
     
     // Utility methods
     std::string get_type_name_from_token(TokenType type);

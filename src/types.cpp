@@ -83,51 +83,6 @@ std::unique_ptr<PrimitiveType> PrimitiveType::from_string(const std::string& typ
     return nullptr;
 }
 
-// ArrayType implementation
-std::string ArrayType::to_string() const {
-    std::stringstream ss;
-    ss << element_type_->to_string();
-    ss << "[";
-    if (size_ == -1) {
-        ss << "]";
-    } else {
-        ss << size_ << "]";
-    }
-    return ss.str();
-}
-
-bool ArrayType::is_assignable_from(const Type& other) const {
-    if (const auto* other_array = dynamic_cast<const ArrayType*>(&other)) {
-        return element_type_->equals(other_array->element_type()) && 
-               (size_ == -1 || size_ == other_array->size());
-    }
-    return false;
-}
-
-bool ArrayType::is_comparable_with(const Type& /* other */) const {
-    // Arrays are not comparable
-    return false;
-}
-
-bool ArrayType::is_arithmetic() const {
-    return false;
-}
-
-bool ArrayType::is_boolean() const {
-    return false;
-}
-
-bool ArrayType::is_void() const {
-    return false;
-}
-
-bool ArrayType::equals(const Type& other) const {
-    if (const auto* other_array = dynamic_cast<const ArrayType*>(&other)) {
-        return element_type_->equals(other_array->element_type()) && 
-               size_ == other_array->size();
-    }
-    return false;
-}
 
 // FunctionType implementation
 std::string FunctionType::to_string() const {
@@ -187,16 +142,80 @@ std::unique_ptr<Type> create_type(const std::string& type_name) {
     if (prim_type) {
         return prim_type;
     }
+    
+    // Try to create a list type
+    auto list_type = ListType::from_string(type_name);
+    if (list_type) {
+        return list_type;
+    }
+    
     return nullptr;
 }
 
-std::unique_ptr<Type> create_array_type(std::unique_ptr<Type> element_type, int size) {
-    return std::make_unique<ArrayType>(std::move(element_type), size);
-}
 
 std::unique_ptr<Type> create_function_type(std::unique_ptr<Type> return_type, 
                                           std::vector<std::unique_ptr<Type>> parameter_types) {
     return std::make_unique<FunctionType>(std::move(return_type), std::move(parameter_types));
+}
+
+// ListType implementation
+std::string ListType::to_string() const {
+    return "list<" + element_type_->to_string() + ">";
+}
+
+bool ListType::is_assignable_from(const Type& other) const {
+    if (const auto* other_list = dynamic_cast<const ListType*>(&other)) {
+        // Lists are assignable if their element types are assignable
+        return element_type_->is_assignable_from(other_list->element_type());
+    }
+    return false;
+}
+
+bool ListType::is_comparable_with(const Type& other) const {
+    if (const auto* other_list = dynamic_cast<const ListType*>(&other)) {
+        // Lists are comparable if their element types are comparable
+        return element_type_->is_comparable_with(other_list->element_type());
+    }
+    return false;
+}
+
+bool ListType::is_arithmetic() const {
+    return false;
+}
+
+bool ListType::is_boolean() const {
+    return false;
+}
+
+bool ListType::is_void() const {
+    return false;
+}
+
+bool ListType::equals(const Type& other) const {
+    if (const auto* other_list = dynamic_cast<const ListType*>(&other)) {
+        return element_type_->equals(other_list->element_type());
+    }
+    return false;
+}
+
+std::unique_ptr<ListType> ListType::create(std::unique_ptr<Type> element_type) {
+    return std::make_unique<ListType>(std::move(element_type));
+}
+
+std::unique_ptr<ListType> ListType::from_string(const std::string& type_name) {
+    // Parse "list<element_type>" format
+    if (type_name.substr(0, 5) == "list<" && type_name.back() == '>') {
+        std::string element_type_name = type_name.substr(5, type_name.length() - 6);
+        auto element_type = create_type(element_type_name);
+        if (element_type) {
+            return create(std::move(element_type));
+        }
+    }
+    return nullptr;
+}
+
+std::unique_ptr<Type> create_list_type(std::unique_ptr<Type> element_type) {
+    return ListType::create(std::move(element_type));
 }
 
 } // namespace ris

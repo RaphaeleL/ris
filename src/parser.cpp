@@ -113,13 +113,11 @@ bool Parser::is_at_end() const {
 }
 
 std::unique_ptr<FuncDecl> Parser::parse_function() {
-    // Parse return type
-    if (!is_type_keyword(current_token().type)) {
+    // Parse return type recursively to handle nested types
+    std::string return_type = parse_type();
+    if (return_type.empty()) {
         return nullptr;
     }
-    
-    std::string return_type = get_type_name(current_token().type);
-    advance();
     
     // Parse function name
     if (!check(TokenType::IDENTIFIER)) {
@@ -138,13 +136,11 @@ std::unique_ptr<FuncDecl> Parser::parse_function() {
     
     if (!check(TokenType::RIGHT_PAREN)) {
         do {
-            if (!is_type_keyword(current_token().type)) {
+            std::string param_type = parse_type();
+            if (param_type.empty()) {
                 error("Expected parameter type");
                 break;
             }
-            
-            std::string param_type = get_type_name(current_token().type);
-            advance();
             
             if (!check(TokenType::IDENTIFIER)) {
                 error("Expected parameter name");
@@ -168,13 +164,11 @@ std::unique_ptr<FuncDecl> Parser::parse_function() {
 }
 
 std::unique_ptr<VarDecl> Parser::parse_variable_declaration() {
-    // Parse type
-    if (!is_type_keyword(current_token().type)) {
+    // Parse type recursively to handle nested types
+    std::string type = parse_type();
+    if (type.empty()) {
         return nullptr;
     }
-    
-    std::string type = get_type_name(current_token().type);
-    advance();
     
     // Parse variable name
     if (!check(TokenType::IDENTIFIER)) {
@@ -188,17 +182,6 @@ std::unique_ptr<VarDecl> Parser::parse_variable_declaration() {
     
     auto var = std::make_unique<VarDecl>(name, type, pos);
     
-    // Check for array declaration
-    if (match(TokenType::LEFT_BRACKET)) {
-        var->is_array = true;
-        if (check(TokenType::INTEGER_LITERAL)) {
-            var->array_size = std::stoi(current_token().value);
-            advance();
-        } else {
-            var->array_size = -1; // Dynamic array
-        }
-        consume(TokenType::RIGHT_BRACKET, "Expected ']' after array size");
-    }
     
     // Parse initializer
     if (match(TokenType::ASSIGN)) {
@@ -225,13 +208,14 @@ std::unique_ptr<Stmt> Parser::parse_statement() {
             return parse_while_statement();
         case TokenType::FOR:
             return parse_for_statement();
+        case TokenType::SWITCH:
+            return parse_switch_statement();
+        case TokenType::BREAK:
+            return parse_break_statement();
+        case TokenType::CONTINUE:
+            return parse_continue_statement();
         case TokenType::RETURN:
             return parse_return_statement();
-        case TokenType::BREAK:
-        case TokenType::CONTINUE:
-            // TODO: Implement break/continue statements
-            error("Break/continue statements not yet implemented");
-            return nullptr;
         default:
             return parse_expression_statement();
     }
@@ -490,6 +474,15 @@ std::unique_ptr<Expr> Parser::parse_unary() {
         return std::make_unique<UnaryExpr>(std::move(operand), op, current_token().position);
     }
     
+    if (match(TokenType::INCREMENT)) {
+        auto operand = parse_unary();
+        if (!operand) {
+            error("Expected expression after '++'");
+            return nullptr;
+        }
+        return std::make_unique<PreIncrementExpr>(std::move(operand), current_token().position);
+    }
+    
     return parse_primary();
 }
 
@@ -508,15 +501,115 @@ std::unique_ptr<Expr> Parser::parse_primary() {
         if (check(TokenType::LEFT_PAREN)) {
             // Function call
             return parse_call();
-        } else if (check(TokenType::LEFT_BRACKET)) {
-            // Array access
-            return parse_array_access();
         } else if (check(TokenType::DOT)) {
-            // Struct access
+            // Check if this is a list method call
+            auto temp_pos = current_token_;
+            advance(); // consume '.'
+            if (check(TokenType::IDENTIFIER)) {
+                std::string method_name = current_token().value;
+                if (method_name == "push" || method_name == "pop" || method_name == "size" || method_name == "get") {
+                    // This is a list method call
+                    auto list_expr = std::make_unique<IdentifierExpr>(name, current_token().position);
+                    advance(); // consume method name
+                    std::vector<std::unique_ptr<Expr>> arguments;
+                    
+                    if (method_name == "push") {
+                        consume(TokenType::LEFT_PAREN, "Expected '(' after push");
+                        if (!check(TokenType::RIGHT_PAREN)) {
+                            auto arg = parse_expression();
+                            if (arg) {
+                                arguments.push_back(std::move(arg));
+                            }
+                        }
+                        consume(TokenType::RIGHT_PAREN, "Expected ')' after push argument");
+                    } else if (method_name == "get") {
+                        consume(TokenType::LEFT_PAREN, "Expected '(' after get");
+                        if (!check(TokenType::RIGHT_PAREN)) {
+                            do {
+                                auto arg = parse_expression();
+                                if (arg) {
+                                    arguments.push_back(std::move(arg));
+                                } else {
+                                    error("Expected index argument");
+                                    break;
+                                }
+                            } while (match(TokenType::COMMA));
+                        }
+                        consume(TokenType::RIGHT_PAREN, "Expected ')' after get arguments");
+                    } else if (method_name == "pop" || method_name == "size") {
+                        consume(TokenType::LEFT_PAREN, "Expected '(' after " + method_name);
+                        consume(TokenType::RIGHT_PAREN, "Expected ')' after " + method_name);
+                    }
+                    
+                    return std::make_unique<ListMethodCallExpr>(std::move(list_expr), method_name, 
+                                                               std::move(arguments), current_token().position);
+                }
+            }
+            // Not a list method, treat as struct access
+            current_token_ = temp_pos; // reset position
             return parse_struct_access();
+        } else if (check(TokenType::LEFT_BRACKET)) {
+            // List indexing - create identifier first, then parse index
+            auto list_expr = std::make_unique<IdentifierExpr>(name, current_token().position);
+            consume(TokenType::LEFT_BRACKET, "Expected '[' after list");
+            auto index = parse_expression();
+            if (!index) {
+                error("Expected index expression");
+                return nullptr;
+            }
+            consume(TokenType::RIGHT_BRACKET, "Expected ']' after index");
+            auto result = std::make_unique<ListIndexExpr>(std::move(list_expr), std::move(index), current_token().position);
+            
+            // Check for chained indexing: a[i][j]
+            while (check(TokenType::LEFT_BRACKET)) {
+                consume(TokenType::LEFT_BRACKET, "Expected '[' for chained indexing");
+                auto chained_index = parse_expression();
+                if (!chained_index) {
+                    error("Expected index expression for chained indexing");
+                    return nullptr;
+                }
+                consume(TokenType::RIGHT_BRACKET, "Expected ']' after chained index");
+                result = std::make_unique<ListIndexExpr>(std::move(result), std::move(chained_index), current_token().position);
+            }
+            
+            // Check for method calls on list index: a[i].size()
+            if (check(TokenType::DOT)) {
+                consume(TokenType::DOT, "Expected '.' for method call");
+                if (!check(TokenType::IDENTIFIER)) {
+                    error("Expected method name after '.'");
+                    return nullptr;
+                }
+                std::string method_name = current_token().value;
+                advance(); // consume the identifier
+                
+                // Parse method arguments
+                std::vector<std::unique_ptr<Expr>> arguments;
+                if (check(TokenType::LEFT_PAREN)) {
+                    consume(TokenType::LEFT_PAREN, "Expected '(' after method name");
+                    if (!check(TokenType::RIGHT_PAREN)) {
+                        do {
+                            auto arg = parse_expression();
+                            if (arg) {
+                                arguments.push_back(std::move(arg));
+                            }
+                        } while (match(TokenType::COMMA));
+                    }
+                    consume(TokenType::RIGHT_PAREN, "Expected ')' after method arguments");
+                }
+                
+                return std::make_unique<ListMethodCallExpr>(std::move(result), method_name, std::move(arguments), current_token().position);
+            }
+            
+            return result;
         } else {
-            // Simple identifier
-            return std::make_unique<IdentifierExpr>(name, current_token().position);
+            // Simple identifier - check for post-increment
+            auto identifier = std::make_unique<IdentifierExpr>(name, current_token().position);
+            
+            if (match(TokenType::INCREMENT)) {
+                return std::make_unique<PostIncrementExpr>(std::move(identifier), current_token().position);
+            }
+            
+            return identifier;
         }
     }
     
@@ -524,6 +617,11 @@ std::unique_ptr<Expr> Parser::parse_primary() {
         auto expr = parse_expression();
         consume(TokenType::RIGHT_PAREN, "Expected ')' after expression");
         return expr;
+    }
+    
+    if (match(TokenType::LEFT_BRACKET)) {
+        // List literal [1, 2, 3]
+        return parse_list_literal();
     }
     
     error("Expected expression");
@@ -553,21 +651,6 @@ std::unique_ptr<CallExpr> Parser::parse_call() {
     return call;
 }
 
-std::unique_ptr<ArrayIndexExpr> Parser::parse_array_access() {
-    auto array = std::make_unique<IdentifierExpr>(tokens_[current_token_ - 1].value, 
-                                                 current_token().position);
-    
-    consume(TokenType::LEFT_BRACKET, "Expected '[' after array name");
-    auto index = parse_expression();
-    if (!index) {
-        error("Expected index expression");
-        return nullptr;
-    }
-    consume(TokenType::RIGHT_BRACKET, "Expected ']' after index");
-    
-    return std::make_unique<ArrayIndexExpr>(std::move(array), std::move(index), 
-                                           current_token().position);
-}
 
 std::unique_ptr<StructAccessExpr> Parser::parse_struct_access() {
     auto object = std::make_unique<IdentifierExpr>(tokens_[current_token_ - 1].value, 
@@ -596,6 +679,7 @@ std::string Parser::get_type_name(TokenType type) {
         case TokenType::CHAR: return "char";
         case TokenType::STRING: return "string";
         case TokenType::VOID: return "void";
+        case TokenType::LIST: return "list";
         default: return "unknown";
     }
 }
@@ -603,7 +687,8 @@ std::string Parser::get_type_name(TokenType type) {
 bool Parser::is_type_keyword(TokenType type) {
     return type == TokenType::INT || type == TokenType::FLOAT || 
            type == TokenType::BOOL || type == TokenType::CHAR || 
-           type == TokenType::STRING || type == TokenType::VOID;
+           type == TokenType::STRING || type == TokenType::VOID ||
+           type == TokenType::LIST;
 }
 
 bool Parser::is_literal(TokenType type) {
@@ -646,6 +731,198 @@ int Parser::get_operator_precedence(TokenType op) {
 
 bool Parser::is_right_associative(TokenType op) {
     return op == TokenType::ASSIGN;
+}
+
+std::unique_ptr<SwitchStmt> Parser::parse_switch_statement() {
+    consume(TokenType::SWITCH, "Expected 'switch'");
+    consume(TokenType::LEFT_PAREN, "Expected '(' after 'switch'");
+    
+    auto expression = parse_expression();
+    if (!expression) {
+        error("Expected switch expression");
+        return nullptr;
+    }
+    
+    consume(TokenType::RIGHT_PAREN, "Expected ')' after switch expression");
+    consume(TokenType::LEFT_BRACE, "Expected '{' after switch");
+    
+    auto switch_stmt = std::make_unique<SwitchStmt>(std::move(expression), current_token().position);
+    
+    // Parse cases
+    while (!check(TokenType::RIGHT_BRACE) && !is_at_end()) {
+        if (check(TokenType::CASE)) {
+            auto case_stmt = parse_case_statement();
+            if (case_stmt) {
+                switch_stmt->cases.push_back(std::move(case_stmt));
+            }
+        } else if (check(TokenType::DEFAULT)) {
+            auto case_stmt = parse_case_statement();
+            if (case_stmt) {
+                switch_stmt->cases.push_back(std::move(case_stmt));
+            }
+        } else {
+            error("Expected 'case' or 'default' in switch statement");
+            break;
+        }
+    }
+    
+    consume(TokenType::RIGHT_BRACE, "Expected '}' after switch statement");
+    
+    return switch_stmt;
+}
+
+std::unique_ptr<CaseStmt> Parser::parse_case_statement() {
+    auto case_stmt = std::make_unique<CaseStmt>(current_token().position);
+    
+    if (check(TokenType::CASE)) {
+        advance(); // consume 'case'
+        
+        auto value = parse_expression();
+        if (!value) {
+            error("Expected case value");
+            return nullptr;
+        }
+        case_stmt->value = std::move(value);
+        
+        consume(TokenType::COLON, "Expected ':' after case value");
+    } else if (check(TokenType::DEFAULT)) {
+        advance(); // consume 'default'
+        consume(TokenType::COLON, "Expected ':' after default");
+        // case_stmt->value remains nullptr for default case
+    } else {
+        error("Expected 'case' or 'default'");
+        return nullptr;
+    }
+    
+    // Parse statements until next case/default or end of switch
+    while (!check(TokenType::CASE) && !check(TokenType::DEFAULT) && 
+           !check(TokenType::RIGHT_BRACE) && !is_at_end()) {
+        auto stmt = parse_statement();
+        if (stmt) {
+            case_stmt->statements.push_back(std::move(stmt));
+        } else {
+            break;
+        }
+    }
+    
+    return case_stmt;
+}
+
+std::unique_ptr<BreakStmt> Parser::parse_break_statement() {
+    consume(TokenType::BREAK, "Expected 'break'");
+    consume(TokenType::SEMICOLON, "Expected ';' after break statement");
+    
+    return std::make_unique<BreakStmt>(current_token().position);
+}
+
+std::unique_ptr<ContinueStmt> Parser::parse_continue_statement() {
+    consume(TokenType::CONTINUE, "Expected 'continue'");
+    consume(TokenType::SEMICOLON, "Expected ';' after continue statement");
+    
+    return std::make_unique<ContinueStmt>(current_token().position);
+}
+
+std::unique_ptr<ListLiteralExpr> Parser::parse_list_literal() {
+    auto list_literal = std::make_unique<ListLiteralExpr>(current_token().position);
+    
+    // Parse elements
+    if (!check(TokenType::RIGHT_BRACKET)) {
+        do {
+            auto element = parse_expression();
+            if (element) {
+                list_literal->elements.push_back(std::move(element));
+            }
+        } while (match(TokenType::COMMA));
+    }
+    
+    consume(TokenType::RIGHT_BRACKET, "Expected ']' after list elements");
+    return list_literal;
+}
+
+std::unique_ptr<ListIndexExpr> Parser::parse_list_index() {
+    auto list = parse_primary();
+    if (!list) {
+        error("Expected list expression");
+        return nullptr;
+    }
+    
+    consume(TokenType::LEFT_BRACKET, "Expected '[' after list");
+    auto index = parse_expression();
+    if (!index) {
+        error("Expected index expression");
+        return nullptr;
+    }
+    consume(TokenType::RIGHT_BRACKET, "Expected ']' after index");
+    
+    return std::make_unique<ListIndexExpr>(std::move(list), std::move(index), current_token().position);
+}
+
+std::unique_ptr<ListMethodCallExpr> Parser::parse_list_method_call() {
+    auto list = parse_primary();
+    if (!list) {
+        error("Expected list expression");
+        return nullptr;
+    }
+    
+    consume(TokenType::DOT, "Expected '.' after list");
+    
+    if (!match(TokenType::IDENTIFIER)) {
+        error("Expected method name");
+        return nullptr;
+    }
+    
+    std::string method_name = tokens_[current_token_ - 1].value;
+    std::vector<std::unique_ptr<Expr>> arguments;
+    
+    if (method_name == "push") {
+        consume(TokenType::LEFT_PAREN, "Expected '(' after push");
+        if (!check(TokenType::RIGHT_PAREN)) {
+            auto arg = parse_expression();
+            if (arg) {
+                arguments.push_back(std::move(arg));
+            }
+        }
+        consume(TokenType::RIGHT_PAREN, "Expected ')' after push argument");
+    } else if (method_name == "pop" || method_name == "size") {
+        consume(TokenType::LEFT_PAREN, "Expected '(' after " + method_name);
+        consume(TokenType::RIGHT_PAREN, "Expected ')' after " + method_name);
+    } else {
+        error("Unknown list method: " + method_name);
+        return nullptr;
+    }
+    
+    return std::make_unique<ListMethodCallExpr>(std::move(list), method_name, 
+                                               std::move(arguments), current_token().position);
+}
+
+std::unique_ptr<PreIncrementExpr> Parser::parse_pre_increment() {
+    // This method is not used directly since pre-increment is handled in parse_unary
+    return nullptr;
+}
+
+std::unique_ptr<PostIncrementExpr> Parser::parse_post_increment() {
+    // This method is not used directly since post-increment is handled in parse_primary
+    return nullptr;
+}
+
+std::string Parser::parse_type() {
+    if (!is_type_keyword(current_token().type)) {
+        error("Expected type");
+        return "";
+    }
+    
+    std::string type = get_type_name(current_token().type);
+    advance();
+    
+    // Handle list type: list<element_type>
+    if (type == "list") {
+        consume(TokenType::LESS, "Expected '<' after list");
+        std::string element_type = parse_type(); // Recursive call for nested types
+        consume(TokenType::GREATER, "Expected '>' after list element type");
+        type = "list<" + element_type + ">";
+    }
+    
+    return type;
 }
 
 } // namespace ris

@@ -20,12 +20,12 @@
     } while(0)
 
 int test_main_basic() {
-    std::cout << "Running main_test..." << std::endl;
+    std::cout << "Running main_test .........";
     
     // Basic test - this will be expanded as we implement more functionality
     ASSERT_TRUE(true);
     
-    std::cout << "✓ main_test passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 

@@ -57,7 +57,7 @@ bool check_file_contains(const std::string& filename, const std::string& expecte
 }
 
 int test_codegen_basic_function() {
-    std::cout << "Running test_codegen_basic_function..." << std::endl;
+    std::cout << "Running test_codegen_basic_function .........";
     
     std::string code = "int main() { return 42; }";
     std::string output_file;
@@ -66,12 +66,12 @@ int test_codegen_basic_function() {
     ASSERT_TRUE(check_file_contains(output_file, "define i64 @main()"));
     ASSERT_TRUE(check_file_contains(output_file, "ret i64 42"));
     
-    std::cout << "✓ test_codegen_basic_function passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_codegen_void_function() {
-    std::cout << "Running test_codegen_void_function..." << std::endl;
+    std::cout << "Running test_codegen_void_function .........";
     
     std::string code = "void test() { return; }";
     std::string output_file;
@@ -80,12 +80,12 @@ int test_codegen_void_function() {
     ASSERT_TRUE(check_file_contains(output_file, "define void @test()"));
     ASSERT_TRUE(check_file_contains(output_file, "ret void"));
     
-    std::cout << "✓ test_codegen_void_function passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_codegen_function_with_parameters() {
-    std::cout << "Running test_codegen_function_with_parameters..." << std::endl;
+    std::cout << "Running test_codegen_function_with_parameters .........";
     
     std::string code = "int add(int a, int b) { return a; }";
     std::string output_file;
@@ -93,12 +93,12 @@ int test_codegen_function_with_parameters() {
     ASSERT_TRUE(compile_code(code, output_file));
     ASSERT_TRUE(check_file_contains(output_file, "define i64 @add(i64"));
     
-    std::cout << "✓ test_codegen_function_with_parameters passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_codegen_global_variables() {
-    std::cout << "Running test_codegen_global_variables..." << std::endl;
+    std::cout << "Running test_codegen_global_variables .........";
     
     std::string code = "int global_var = 123; int main() { return 0; }";
     std::string output_file;
@@ -106,12 +106,12 @@ int test_codegen_global_variables() {
     ASSERT_TRUE(compile_code(code, output_file));
     ASSERT_TRUE(check_file_contains(output_file, "@global_var"));
     
-    std::cout << "✓ test_codegen_global_variables passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_codegen_arithmetic_expressions() {
-    std::cout << "Running test_codegen_arithmetic_expressions..." << std::endl;
+    std::cout << "Running test_codegen_arithmetic_expressions .........";
     
     std::string code = "int main() { return 2 + 3; }";
     std::string output_file;
@@ -120,12 +120,12 @@ int test_codegen_arithmetic_expressions() {
     // LLVM might constant fold 2 + 3 to 5, so check for the result or the operation
     ASSERT_TRUE(check_file_contains(output_file, "ret i64 5") || check_file_contains(output_file, "add"));
     
-    std::cout << "✓ test_codegen_arithmetic_expressions passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_codegen_boolean_literals() {
-    std::cout << "Running test_codegen_boolean_literals..." << std::endl;
+    std::cout << "Running test_codegen_boolean_literals .........";
     
     std::string code = "bool main() { return true; }";
     std::string output_file;
@@ -134,12 +134,12 @@ int test_codegen_boolean_literals() {
     ASSERT_TRUE(check_file_contains(output_file, "define i8 @main()"));
     ASSERT_TRUE(check_file_contains(output_file, "ret i8 1"));
     
-    std::cout << "✓ test_codegen_boolean_literals passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_codegen_float_operations() {
-    std::cout << "Running test_codegen_float_operations..." << std::endl;
+    std::cout << "Running test_codegen_float_operations .........";
     
     std::string code = "float main() { return 3.14; }";
     std::string output_file;
@@ -148,12 +148,12 @@ int test_codegen_float_operations() {
     ASSERT_TRUE(check_file_contains(output_file, "define double @main()"));
     ASSERT_TRUE(check_file_contains(output_file, "ret double"));
     
-    std::cout << "✓ test_codegen_float_operations passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_codegen_string_literals() {
-    std::cout << "Running test_codegen_string_literals..." << std::endl;
+    std::cout << "Running test_codegen_string_literals .........";
     
     std::string code = R"(string main() { return "hello"; })";
     std::string output_file;
@@ -161,12 +161,12 @@ int test_codegen_string_literals() {
     ASSERT_TRUE(compile_code(code, output_file));
     ASSERT_TRUE(check_file_contains(output_file, "hello"));
     
-    std::cout << "✓ test_codegen_string_literals passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 
 int test_codegen_error_handling() {
-    std::cout << "Running test_codegen_error_handling..." << std::endl;
+    std::cout << "Running test_codegen_error_handling .........";
     
     // Test with invalid code that should fail semantic analysis
     std::string code = "int main() { return undefined_var; }";
@@ -174,7 +174,7 @@ int test_codegen_error_handling() {
     
     ASSERT_FALSE(compile_code(code, output_file));
     
-    std::cout << "✓ test_codegen_error_handling passed" << std::endl;
+    std::cout << " OK" << std::endl;
     return 0;
 }
 

@@ -15,6 +15,7 @@ INCLUDE_DIR = include
 BUILD_DIR   = out/build
 BIN_DIR     = out/bin
 TEST_DIR    = tests
+RUNTIME_DIR = runtime
 
 # Source files
 SOURCES = $(wildcard $(SRC_DIR)/*.cpp)
@@ -24,19 +25,18 @@ HEADERS = $(wildcard $(INCLUDE_DIR)/*.h)
 # Test files
 UNIT_TESTS      = $(wildcard $(TEST_DIR)/unit/*_test.cpp)
 TEST_RUNNER     = $(TEST_DIR)/unit/test_runner.cpp
-INTEGRATION_TESTS = $(wildcard $(TEST_DIR)/integration/*.c)
 
 # Main targets
 TARGET      = $(BIN_DIR)/risc
 TEST_TARGET = $(BIN_DIR)/risc_test
-RUNTIME_LIB = $(BIN_DIR)/libris_runtime.a
+RUNTIME_LIB = $(RUNTIME_DIR)/libris_runtime.a
 
 # Test object files
 TEST_OBJECTS    = $(UNIT_TESTS:$(TEST_DIR)/unit/%_test.cpp=$(BUILD_DIR)/%_test.o)
 TEST_RUNNER_OBJ = $(BUILD_DIR)/test_runner.o
 
 # Pretty-print helpers
-ECHO_CC = @printf " CC      %s\n" $<
+ECHO_CC = @printf " CXX     %s\n" $<
 ECHO_LD = @printf " LD      %s\n" $@
 ECHO_MK = @printf " MKDIR   %s\n" $@
 ECHO_AR = @printf " AR      %s\n" $@
@@ -56,7 +56,7 @@ $(BIN_DIR):
 	@mkdir -p $@
 
 # Runtime library
-$(RUNTIME_LIB): $(BUILD_DIR)/runtime.o | $(BIN_DIR)
+$(RUNTIME_LIB): $(BUILD_DIR)/runtime.o | $(RUNTIME_DIR)
 	$(ECHO_AR)
 	@ar rcs $@ $^
 
@@ -100,17 +100,6 @@ test: $(TEST_TARGET)
 	@echo "Running unit tests..."
 	@./$(TEST_TARGET)
 
-# Run integration tests
-test-integration: $(TARGET)
-	@echo "Running integration tests..."
-	@for test in $(INTEGRATION_TESTS); do \
-		echo "Testing $$test..."; \
-		./$(TARGET) $$test -o /tmp/test_$$(basename $$test .c).ll; \
-		llc /tmp/test_$$(basename $$test .c).ll -o /tmp/test_$$(basename $$test .c).s; \
-		clang /tmp/test_$$(basename $$test .c).s -o /tmp/test_$$(basename $$test .c); \
-		/tmp/test_$$(basename $$test .c); \
-	done
-
 # Clean build artifacts
 clean:
 	$(ECHO_RM) out
@@ -127,9 +116,8 @@ help:
 	@echo "  all              - Build the compiler"
 	@echo "  check            - Check LLVM installation"
 	@echo "  test             - Run unit tests"
-	@echo "  test-integration - Run integration tests"
 	@echo "  clean            - Clean build artifacts"
 	@echo "  install          - Install compiler to /usr/local/bin"
 	@echo "  help             - Show this help"
 
-.PHONY: all check test test-integration clean install help
+.PHONY: all check test clean install help

@@ -1,4 +1,5 @@
 #include "semantic_analyzer.h"
+#include "types.h"
 #include <sstream>
 #include <iostream>
 
@@ -133,18 +134,6 @@ std::unique_ptr<Type> SemanticAnalyzer::analyze_expression_type(Expr& expr) {
             default:
                 return create_type("int");
         }
-    } else if (auto* array_access = dynamic_cast<ArrayIndexExpr*>(&expr)) {
-        // For array access, return the element type of the array
-        Symbol* symbol = symbol_table_.lookup(dynamic_cast<IdentifierExpr*>(array_access->array.get())->name);
-        if (symbol && symbol->kind() == Symbol::Kind::VARIABLE) {
-            auto* var_symbol = static_cast<VariableSymbol*>(symbol);
-            if (var_symbol->is_array()) {
-                // Get the element type from the array type
-                if (auto* array_type = dynamic_cast<const ArrayType*>(&var_symbol->type())) {
-                    return create_type(array_type->element_type().to_string());
-                }
-            }
-        }
         return create_type("int"); // Default fallback
     } else if (auto* call = dynamic_cast<CallExpr*>(&expr)) {
         // For function calls, return the return type of the function
@@ -152,6 +141,49 @@ std::unique_ptr<Type> SemanticAnalyzer::analyze_expression_type(Expr& expr) {
         if (symbol && symbol->kind() == Symbol::Kind::FUNCTION) {
             auto* func_symbol = static_cast<FunctionSymbol*>(symbol);
             return create_type(func_symbol->return_type().to_string());
+        }
+        return create_type("int"); // Default fallback
+    } else if (auto* list_literal = dynamic_cast<ListLiteralExpr*>(&expr)) {
+        // For list literals, determine the type from the first element
+        if (!list_literal->elements.empty()) {
+            auto element_type = analyze_expression_type(*list_literal->elements[0]);
+            if (element_type) {
+                return create_list_type(std::move(element_type));
+            }
+        }
+        // Empty list - default to list<int>
+        return create_list_type(create_type("int"));
+    } else if (auto* pre_inc = dynamic_cast<PreIncrementExpr*>(&expr)) {
+        // Pre-increment returns the type of the operand
+        return analyze_expression_type(*pre_inc->operand);
+    } else if (auto* post_inc = dynamic_cast<PostIncrementExpr*>(&expr)) {
+        // Post-increment returns the type of the operand
+        return analyze_expression_type(*post_inc->operand);
+    } else if (auto* list_index = dynamic_cast<ListIndexExpr*>(&expr)) {
+        // List indexing returns the element type of the list
+        auto list_type = analyze_expression_type(*list_index->list);
+        if (auto* list_type_ptr = dynamic_cast<const ListType*>(list_type.get())) {
+            // Create a copy of the element type
+            auto element_type_name = list_type_ptr->element_type().to_string();
+            return create_type(element_type_name);
+        }
+        return create_type("int"); // Default fallback
+    } else if (auto* list_method = dynamic_cast<ListMethodCallExpr*>(&expr)) {
+        // For list method calls, determine return type based on method
+        if (list_method->method_name == "get") {
+            // get() returns the element type of the list
+            auto list_type = analyze_expression_type(*list_method->list);
+            if (auto* list_type_ptr = dynamic_cast<const ListType*>(list_type.get())) {
+                auto element_type_name = list_type_ptr->element_type().to_string();
+                return create_type(element_type_name);
+            }
+            return create_type("int"); // Default fallback
+        } else if (list_method->method_name == "size") {
+            // size() returns int
+            return create_type("int");
+        } else if (list_method->method_name == "push" || list_method->method_name == "pop") {
+            // push() and pop() return void
+            return create_type("void");
         }
         return create_type("int"); // Default fallback
     }
@@ -294,21 +326,11 @@ void SemanticAnalyzer::analyze_function(FuncDecl& func) {
 void SemanticAnalyzer::analyze_variable_declaration(VarDecl& var, bool /* is_global */) {
     std::unique_ptr<Type> var_type;
     
-    if (var.is_array) {
-        // Create array type
-        auto element_type = analyze_type(var.type);
-        if (!element_type) {
-            error("Unknown array element type: " + var.type, var.position);
-            return;
-        }
-        var_type = create_array_type(std::move(element_type), var.array_size);
-    } else {
-        // Regular variable type
-        var_type = analyze_type(var.type);
-        if (!var_type) {
-            error("Unknown variable type: " + var.type, var.position);
-            return;
-        }
+    // Regular variable type
+    var_type = analyze_type(var.type);
+    if (!var_type) {
+        error("Unknown variable type: " + var.type, var.position);
+        return;
     }
     
     // Check if variable already exists
@@ -319,7 +341,7 @@ void SemanticAnalyzer::analyze_variable_declaration(VarDecl& var, bool /* is_glo
     
     // Create variable symbol
     auto var_symbol = std::make_unique<VariableSymbol>(
-        var.name, std::move(var_type), var.position, var.is_array, var.array_size
+        var.name, std::move(var_type), var.position
     );
     
     if (!symbol_table_.add_symbol(std::move(var_symbol))) {
@@ -352,6 +374,14 @@ void SemanticAnalyzer::analyze_statement(Stmt& stmt) {
         analyze_while_statement(*while_stmt);
     } else if (auto* for_stmt = dynamic_cast<ForStmt*>(&stmt)) {
         analyze_for_statement(*for_stmt);
+    } else if (auto* switch_stmt = dynamic_cast<SwitchStmt*>(&stmt)) {
+        analyze_switch_statement(*switch_stmt);
+    } else if (auto* case_stmt = dynamic_cast<CaseStmt*>(&stmt)) {
+        analyze_case_statement(*case_stmt);
+    } else if (auto* break_stmt = dynamic_cast<BreakStmt*>(&stmt)) {
+        analyze_break_statement(*break_stmt);
+    } else if (auto* continue_stmt = dynamic_cast<ContinueStmt*>(&stmt)) {
+        analyze_continue_statement(*continue_stmt);
     } else if (auto* return_stmt = dynamic_cast<ReturnStmt*>(&stmt)) {
         analyze_return_statement(*return_stmt);
     } else if (auto* expr_stmt = dynamic_cast<ExprStmt*>(&stmt)) {
@@ -475,10 +505,6 @@ void SemanticAnalyzer::analyze_expression(Expr& expr) {
         }
     } else if (auto* call = dynamic_cast<CallExpr*>(&expr)) {
         analyze_call_expression(*call);
-    } else if (auto* array_access = dynamic_cast<ArrayIndexExpr*>(&expr)) {
-        if (array_access->array && array_access->index) {
-            analyze_array_access_expression(*array_access);
-        }
     } else if (auto* struct_access = dynamic_cast<StructAccessExpr*>(&expr)) {
         if (struct_access->object) {
             analyze_struct_access_expression(*struct_access);
@@ -487,6 +513,16 @@ void SemanticAnalyzer::analyze_expression(Expr& expr) {
         analyze_literal_expression(*literal);
     } else if (auto* identifier = dynamic_cast<IdentifierExpr*>(&expr)) {
         analyze_identifier_expression(*identifier);
+    } else if (auto* list_literal = dynamic_cast<ListLiteralExpr*>(&expr)) {
+        analyze_list_literal_expression(*list_literal);
+    } else if (auto* list_index = dynamic_cast<ListIndexExpr*>(&expr)) {
+        analyze_list_index_expression(*list_index);
+    } else if (auto* list_method = dynamic_cast<ListMethodCallExpr*>(&expr)) {
+        analyze_list_method_call_expression(*list_method);
+    } else if (auto* pre_inc = dynamic_cast<PreIncrementExpr*>(&expr)) {
+        analyze_pre_increment_expression(*pre_inc);
+    } else if (auto* post_inc = dynamic_cast<PostIncrementExpr*>(&expr)) {
+        analyze_post_increment_expression(*post_inc);
     }
 }
 
@@ -608,15 +644,6 @@ void SemanticAnalyzer::analyze_call_expression(CallExpr& expr) {
     }
 }
 
-void SemanticAnalyzer::analyze_array_access_expression(ArrayIndexExpr& expr) {
-    analyze_expression(*expr.array);
-    analyze_expression(*expr.index);
-    
-    auto index_type = analyze_expression_type(*expr.index);
-    if (index_type) {
-        check_arithmetic(*index_type, expr.position);
-    }
-}
 
 void SemanticAnalyzer::analyze_struct_access_expression(StructAccessExpr& expr) {
     analyze_expression(*expr.object);
@@ -648,6 +675,7 @@ std::string SemanticAnalyzer::get_type_name_from_token(TokenType type) {
         case TokenType::CHAR: return "char";
         case TokenType::STRING: return "string";
         case TokenType::VOID: return "void";
+        case TokenType::LIST: return "list";
         default: return "unknown";
     }
 }
@@ -655,7 +683,8 @@ std::string SemanticAnalyzer::get_type_name_from_token(TokenType type) {
 bool SemanticAnalyzer::is_type_keyword(TokenType type) {
     return type == TokenType::INT || type == TokenType::FLOAT || 
            type == TokenType::BOOL || type == TokenType::CHAR || 
-           type == TokenType::STRING || type == TokenType::VOID;
+           type == TokenType::STRING || type == TokenType::VOID ||
+           type == TokenType::LIST;
 }
 
 std::unique_ptr<Type> SemanticAnalyzer::create_type_from_token(TokenType type) {
@@ -688,9 +717,205 @@ void SemanticAnalyzer::add_runtime_functions() {
     add_func("ris_free", "void", {"string"});
     add_func("ris_string_concat", "string", {"string", "string"});
     add_func("ris_string_length", "int", {"string"});
-    add_func("ris_array_alloc", "string", {"int", "int"});
-    add_func("ris_array_free", "void", {"string"});
     add_func("ris_exit", "void", {"int"});
+}
+
+void SemanticAnalyzer::analyze_switch_statement(SwitchStmt& stmt) {
+    if (stmt.expression) {
+        analyze_expression(*stmt.expression);
+        auto expr_type = analyze_expression_type(*stmt.expression);
+        if (expr_type) {
+            // Switch expression should be comparable (int, char, etc.)
+            if (!expr_type->is_arithmetic() && !expr_type->is_boolean()) {
+                error("Switch expression must be of arithmetic or boolean type", stmt.position);
+            }
+        }
+    }
+    
+    // Analyze all cases
+    for (auto& case_stmt : stmt.cases) {
+        if (case_stmt) {
+            analyze_case_statement(*case_stmt);
+        }
+    }
+}
+
+void SemanticAnalyzer::analyze_case_statement(CaseStmt& stmt) {
+    if (stmt.value) {
+        // This is a case with a value, not default
+        analyze_expression(*stmt.value);
+        auto case_type = analyze_expression_type(*stmt.value);
+        if (case_type) {
+            // Case value should be comparable with switch expression
+            // For now, we'll just check it's a valid type
+            if (!case_type->is_arithmetic() && !case_type->is_boolean()) {
+                error("Case value must be of arithmetic or boolean type", stmt.position);
+            }
+        }
+    }
+    
+    // Analyze statements in the case
+    for (auto& stmt_ptr : stmt.statements) {
+        if (stmt_ptr) {
+            analyze_statement(*stmt_ptr);
+        }
+    }
+}
+
+void SemanticAnalyzer::analyze_break_statement(BreakStmt& /* stmt */) {
+    // Break statements are valid in switch, while, and for loops
+    // For now, we'll just accept them - proper validation would require
+    // tracking the current control structure context
+}
+
+void SemanticAnalyzer::analyze_continue_statement(ContinueStmt& /* stmt */) {
+    // Continue statements are valid in while and for loops
+    // For now, we'll just accept them - proper validation would require
+    // tracking the current control structure context
+}
+
+void SemanticAnalyzer::analyze_list_literal_expression(ListLiteralExpr& expr) {
+    // Analyze all elements in the list
+    for (auto& element : expr.elements) {
+        if (element) {
+            analyze_expression(*element);
+        }
+    }
+    
+    // Check that all elements have the same type
+    if (!expr.elements.empty()) {
+        auto first_type = analyze_expression_type(*expr.elements[0]);
+        for (size_t i = 1; i < expr.elements.size(); ++i) {
+            auto element_type = analyze_expression_type(*expr.elements[i]);
+            if (first_type && element_type && !first_type->equals(*element_type)) {
+                error("List elements must all be of the same type", expr.position);
+                break;
+            }
+        }
+    }
+}
+
+void SemanticAnalyzer::analyze_list_index_expression(ListIndexExpr& expr) {
+    if (expr.list) {
+        analyze_expression(*expr.list);
+    }
+    if (expr.index) {
+        analyze_expression(*expr.index);
+    }
+    
+    // Check that the list is actually a list type
+    auto list_type = analyze_expression_type(*expr.list);
+    if (list_type && !dynamic_cast<const ListType*>(list_type.get())) {
+        error("Indexing operator '[]' can only be used on lists", expr.position);
+    }
+    
+    // Check that the index is an integer
+    auto index_type = analyze_expression_type(*expr.index);
+    if (index_type && !index_type->is_arithmetic()) {
+        error("List index must be an integer", expr.position);
+    }
+}
+
+void SemanticAnalyzer::analyze_list_method_call_expression(ListMethodCallExpr& expr) {
+    if (expr.list) {
+        analyze_expression(*expr.list);
+    }
+    
+    // Check that the list is actually a list type
+    auto list_type = analyze_expression_type(*expr.list);
+    if (list_type && !dynamic_cast<const ListType*>(list_type.get())) {
+        error("Method calls can only be used on lists", expr.position);
+        return;
+    }
+    
+    // Analyze arguments
+    for (auto& arg : expr.arguments) {
+        if (arg) {
+            analyze_expression(*arg);
+        }
+    }
+    
+    // Validate method calls
+    if (expr.method_name == "push") {
+        if (expr.arguments.size() != 1) {
+            error("push() method requires exactly one argument", expr.position);
+        } else {
+            // Check that the argument type matches the list element type
+            auto list_type_ptr = dynamic_cast<const ListType*>(list_type.get());
+            if (list_type_ptr) {
+                auto arg_type = analyze_expression_type(*expr.arguments[0]);
+                if (arg_type && !list_type_ptr->element_type().is_assignable_from(*arg_type)) {
+                    error("push() argument type must match list element type", expr.position);
+                }
+            }
+        }
+    } else if (expr.method_name == "get") {
+        if (expr.arguments.empty()) {
+            error("get() method requires at least one index argument", expr.position);
+        } else {
+            // Check that all arguments are integers
+            for (size_t i = 0; i < expr.arguments.size(); ++i) {
+                auto arg_type = analyze_expression_type(*expr.arguments[i]);
+                if (arg_type && !arg_type->is_arithmetic()) {
+                    error("get() index arguments must be integers", expr.position);
+                }
+            }
+        }
+    } else if (expr.method_name == "pop" || expr.method_name == "size") {
+        if (!expr.arguments.empty()) {
+            error(expr.method_name + "() method takes no arguments", expr.position);
+        }
+    } else {
+        error("Unknown list method: " + expr.method_name, expr.position);
+    }
+}
+
+void SemanticAnalyzer::analyze_pre_increment_expression(PreIncrementExpr& expr) {
+    if (!expr.operand) {
+        error("Expected operand for pre-increment", expr.position);
+        return;
+    }
+    
+    analyze_expression(*expr.operand);
+    
+    // Check that the operand is a variable (not a literal or complex expression)
+    if (!dynamic_cast<IdentifierExpr*>(expr.operand.get())) {
+        error("Pre-increment operand must be a variable", expr.position);
+        return;
+    }
+    
+    // Check that the operand is an integer type
+    auto operand_type = analyze_expression_type(*expr.operand);
+    if (!operand_type || !operand_type->is_arithmetic()) {
+        error("Pre-increment operand must be an integer", expr.position);
+        return;
+    }
+    
+    // The expression type is determined by analyze_expression_type
+}
+
+void SemanticAnalyzer::analyze_post_increment_expression(PostIncrementExpr& expr) {
+    if (!expr.operand) {
+        error("Expected operand for post-increment", expr.position);
+        return;
+    }
+    
+    analyze_expression(*expr.operand);
+    
+    // Check that the operand is a variable (not a literal or complex expression)
+    if (!dynamic_cast<IdentifierExpr*>(expr.operand.get())) {
+        error("Post-increment operand must be a variable", expr.position);
+        return;
+    }
+    
+    // Check that the operand is an integer type
+    auto operand_type = analyze_expression_type(*expr.operand);
+    if (!operand_type || !operand_type->is_arithmetic()) {
+        error("Post-increment operand must be an integer", expr.position);
+        return;
+    }
+    
+    // The expression type is determined by analyze_expression_type
 }
 
 } // namespace ris

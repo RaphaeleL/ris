@@ -16,15 +16,23 @@ class BlockStmt;
 class IfStmt;
 class WhileStmt;
 class ForStmt;
+class SwitchStmt;
+class CaseStmt;
+class BreakStmt;
+class ContinueStmt;
 class ReturnStmt;
 class ExprStmt;
 class BinaryExpr;
 class UnaryExpr;
 class CallExpr;
-class ArrayIndexExpr;
 class StructAccessExpr;
 class LiteralExpr;
 class IdentifierExpr;
+class ListLiteralExpr;
+class ListIndexExpr;
+class ListMethodCallExpr;
+class PreIncrementExpr;
+class PostIncrementExpr;
 
 // Base AST node class
 class ASTNode {
@@ -82,11 +90,9 @@ public:
     std::string name;
     std::string type;
     std::unique_ptr<Expr> initializer;
-    bool is_array;
-    int array_size; // -1 for dynamic arrays
     
     VarDecl(const std::string& n, const std::string& t, const SourcePos& pos)
-        : Stmt(pos), name(n), type(t), is_array(false), array_size(-1) {}
+        : Stmt(pos), name(n), type(t) {}
     
     void accept(class ASTVisitor& visitor) override;
 };
@@ -149,6 +155,45 @@ public:
     void accept(class ASTVisitor& visitor) override;
 };
 
+// Break statement
+class BreakStmt : public Stmt {
+public:
+    BreakStmt(const SourcePos& pos) : Stmt(pos) {}
+    
+    void accept(class ASTVisitor& visitor) override;
+};
+
+// Continue statement
+class ContinueStmt : public Stmt {
+public:
+    ContinueStmt(const SourcePos& pos) : Stmt(pos) {}
+    
+    void accept(class ASTVisitor& visitor) override;
+};
+
+// Case statement
+class CaseStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> value; // nullptr for default case
+    std::vector<std::unique_ptr<Stmt>> statements;
+    
+    CaseStmt(const SourcePos& pos) : Stmt(pos) {}
+    
+    void accept(class ASTVisitor& visitor) override;
+};
+
+// Switch statement
+class SwitchStmt : public Stmt {
+public:
+    std::unique_ptr<Expr> expression;
+    std::vector<std::unique_ptr<CaseStmt>> cases;
+    
+    SwitchStmt(std::unique_ptr<Expr> expr, const SourcePos& pos)
+        : Stmt(pos), expression(std::move(expr)) {}
+    
+    void accept(class ASTVisitor& visitor) override;
+};
+
 // Expression statement
 class ExprStmt : public Stmt {
 public:
@@ -197,17 +242,6 @@ public:
     void accept(class ASTVisitor& visitor) override;
 };
 
-// Array index expression
-class ArrayIndexExpr : public Expr {
-public:
-    std::unique_ptr<Expr> array;
-    std::unique_ptr<Expr> index;
-    
-    ArrayIndexExpr(std::unique_ptr<Expr> arr, std::unique_ptr<Expr> idx, const SourcePos& pos)
-        : Expr(pos), array(std::move(arr)), index(std::move(idx)) {}
-    
-    void accept(class ASTVisitor& visitor) override;
-};
 
 // Struct access expression
 class StructAccessExpr : public Expr {
@@ -244,6 +278,62 @@ public:
     void accept(class ASTVisitor& visitor) override;
 };
 
+// List literal expression [1, 2, 3]
+class ListLiteralExpr : public Expr {
+public:
+    std::vector<std::unique_ptr<Expr>> elements;
+    
+    ListLiteralExpr(const SourcePos& pos) : Expr(pos) {}
+    
+    void accept(class ASTVisitor& visitor) override;
+};
+
+// List index expression list[2]
+class ListIndexExpr : public Expr {
+public:
+    std::unique_ptr<Expr> list;
+    std::unique_ptr<Expr> index;
+    
+    ListIndexExpr(std::unique_ptr<Expr> l, std::unique_ptr<Expr> i, const SourcePos& pos)
+        : Expr(pos), list(std::move(l)), index(std::move(i)) {}
+    
+    void accept(class ASTVisitor& visitor) override;
+};
+
+// List method call expression list.push(5), list.pop(), list.size()
+class ListMethodCallExpr : public Expr {
+public:
+    std::unique_ptr<Expr> list;
+    std::string method_name; // "push", "pop", "size"
+    std::vector<std::unique_ptr<Expr>> arguments; // for push method
+    
+    ListMethodCallExpr(std::unique_ptr<Expr> l, const std::string& method, 
+                      std::vector<std::unique_ptr<Expr>> args, const SourcePos& pos)
+        : Expr(pos), list(std::move(l)), method_name(method), arguments(std::move(args)) {}
+    
+    void accept(class ASTVisitor& visitor) override;
+};
+
+class PreIncrementExpr : public Expr {
+public:
+    std::unique_ptr<Expr> operand;
+    
+    PreIncrementExpr(std::unique_ptr<Expr> opd, const SourcePos& pos)
+        : Expr(pos), operand(std::move(opd)) {}
+    
+    void accept(class ASTVisitor& visitor) override;
+};
+
+class PostIncrementExpr : public Expr {
+public:
+    std::unique_ptr<Expr> operand;
+    
+    PostIncrementExpr(std::unique_ptr<Expr> opd, const SourcePos& pos)
+        : Expr(pos), operand(std::move(opd)) {}
+    
+    void accept(class ASTVisitor& visitor) override;
+};
+
 // AST Visitor interface (for future use)
 class ASTVisitor {
 public:
@@ -255,15 +345,23 @@ public:
     virtual void visit(IfStmt& node) = 0;
     virtual void visit(WhileStmt& node) = 0;
     virtual void visit(ForStmt& node) = 0;
+    virtual void visit(SwitchStmt& node) = 0;
+    virtual void visit(CaseStmt& node) = 0;
+    virtual void visit(BreakStmt& node) = 0;
+    virtual void visit(ContinueStmt& node) = 0;
     virtual void visit(ReturnStmt& node) = 0;
     virtual void visit(ExprStmt& node) = 0;
     virtual void visit(BinaryExpr& node) = 0;
     virtual void visit(UnaryExpr& node) = 0;
     virtual void visit(CallExpr& node) = 0;
-    virtual void visit(ArrayIndexExpr& node) = 0;
     virtual void visit(StructAccessExpr& node) = 0;
     virtual void visit(LiteralExpr& node) = 0;
     virtual void visit(IdentifierExpr& node) = 0;
+    virtual void visit(ListLiteralExpr& node) = 0;
+    virtual void visit(ListIndexExpr& node) = 0;
+    virtual void visit(ListMethodCallExpr& node) = 0;
+    virtual void visit(PreIncrementExpr& node) = 0;
+    virtual void visit(PostIncrementExpr& node) = 0;
 };
 
 } // namespace ris

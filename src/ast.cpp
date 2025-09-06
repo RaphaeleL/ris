@@ -42,6 +42,26 @@ void ReturnStmt::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }
 
+// BreakStmt
+void BreakStmt::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// ContinueStmt
+void ContinueStmt::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// CaseStmt
+void CaseStmt::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// SwitchStmt
+void SwitchStmt::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
 // ExprStmt
 void ExprStmt::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
@@ -62,10 +82,6 @@ void CallExpr::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }
 
-// ArrayIndexExpr
-void ArrayIndexExpr::accept(ASTVisitor& visitor) {
-    visitor.visit(*this);
-}
 
 // StructAccessExpr
 void StructAccessExpr::accept(ASTVisitor& visitor) {
@@ -79,6 +95,31 @@ void LiteralExpr::accept(ASTVisitor& visitor) {
 
 // IdentifierExpr
 void IdentifierExpr::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// ListLiteralExpr
+void ListLiteralExpr::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// ListIndexExpr
+void ListIndexExpr::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// ListMethodCallExpr
+void ListMethodCallExpr::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// PreIncrementExpr
+void PreIncrementExpr::accept(ASTVisitor& visitor) {
+    visitor.visit(*this);
+}
+
+// PostIncrementExpr
+void PostIncrementExpr::accept(ASTVisitor& visitor) {
     visitor.visit(*this);
 }
 
