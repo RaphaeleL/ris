@@ -27,11 +27,11 @@ void print_test_start(const std::string& test_name, size_t max_length) {
 }
 
 void print_test_success() {
-    std::cout << " OK" << std::endl;
+    std::cout << " " << COLOR_GREEN << "OK" << COLOR_RESET << std::endl;
 }
 
 void print_test_failure(const std::string& message) {
-    std::cout << " FAIL  " << message << std::endl;
+    std::cout << " " << COLOR_RED << "FAIL" << COLOR_RESET << "  " << message << std::endl;
 }
 
 } // namespace test_utils

@@ -4,6 +4,11 @@
 #include <sstream>
 #include "test_utils.h"
 
+// ANSI color codes (also defined in test_utils.h but needed here for direct use)
+#define COLOR_RESET   "\033[0m"
+#define COLOR_GREEN   "\033[32m"
+#define COLOR_RED     "\033[31m"
+
 // Forward declarations
 int test_lexer_basic();
 int test_lexer_keywords();
@@ -173,7 +178,7 @@ int main() {
             if (!error_msg.empty() && error_msg.back() == '\n') {
                 error_msg.pop_back();
             }
-            std::cout << " FAIL  " << error_msg << std::endl;
+            std::cout << " " << COLOR_RED << "FAIL" << COLOR_RESET << "  " << error_msg << std::endl;
         }
         
         result += test_result;
