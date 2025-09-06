@@ -252,6 +252,10 @@ void SemanticAnalyzer::analyze_function(FuncDecl& func) {
         return;
     }
     
+    // Track current function for return statement analysis
+    current_function_name_ = func.name;
+    current_function_return_type_ = func.return_type;
+    
     // Enter function scope
     symbol_table_.enter_scope();
     
@@ -272,8 +276,19 @@ void SemanticAnalyzer::analyze_function(FuncDecl& func) {
         analyze_block(*func.body);
     }
     
+    // Check if function has return statement for non-void functions
+    if (!func.return_type.empty() && func.return_type != "void") {
+        // TODO: This is a simplified check - in a real implementation, 
+        // we'd analyze the control flow to ensure all paths return a value
+        // For now, we'll let the codegen handle this
+    }
+    
     // Exit function scope
     symbol_table_.exit_scope();
+    
+    // Clear current function tracking
+    current_function_name_.clear();
+    current_function_return_type_.clear();
 }
 
 void SemanticAnalyzer::analyze_variable_declaration(VarDecl& var, bool /* is_global */) {
@@ -417,7 +432,29 @@ void SemanticAnalyzer::analyze_for_statement(ForStmt& stmt) {
 void SemanticAnalyzer::analyze_return_statement(ReturnStmt& stmt) {
     if (stmt.value) {
         analyze_expression(*stmt.value);
-        // TODO: Check return type compatibility with function return type
+        
+        // Check return type compatibility with function return type
+        auto return_type = analyze_expression_type(*stmt.value);
+        if (return_type && !current_function_return_type_.empty()) {
+            auto func_return_type = create_type(current_function_return_type_);
+            if (func_return_type) {
+                if (func_return_type->is_void() && !return_type->is_void()) {
+                    error("Function declared as 'void' cannot return a value. Remove the return statement or change function return type.", stmt.position);
+                } else if (!func_return_type->is_void() && return_type->is_void()) {
+                    error("Function must return a value. Add a return statement or change function return type to 'void'.", stmt.position);
+                } else if (!func_return_type->is_void() && !return_type->is_void()) {
+                    check_assignable(*func_return_type, *return_type, stmt.position);
+                }
+            }
+        }
+    } else {
+        // No return value - check if function expects a return value
+        if (!current_function_return_type_.empty()) {
+            auto func_return_type = create_type(current_function_return_type_);
+            if (func_return_type && !func_return_type->is_void()) {
+                error("Function must return a value. Add a return statement or change function return type to 'void'.", stmt.position);
+            }
+        }
     }
 }
 

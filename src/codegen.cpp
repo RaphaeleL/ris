@@ -34,8 +34,12 @@ bool CodeGenerator::generate(std::unique_ptr<Program> program, const std::string
     }
     
     // Verify the module
-    if (llvm::verifyModule(*module_, &llvm::errs())) {
-        error("Module verification failed");
+    std::string verification_error;
+    llvm::raw_string_ostream error_stream(verification_error);
+    if (llvm::verifyModule(*module_, &error_stream)) {
+        // Parse the verification error to provide better diagnostics
+        std::string error_msg = parse_verification_error(verification_error);
+        error(error_msg);
         return false;
     }
     
@@ -71,6 +75,37 @@ void CodeGenerator::error(const std::string& message, const SourcePos& position)
     
     // Also add to centralized diagnostic system
     diagnostics_.add_error(message, position, "codegen");
+}
+
+std::string CodeGenerator::parse_verification_error(const std::string& error) {
+    // Parse common LLVM verification errors and provide user-friendly messages
+    
+    if (error.find("returns non-void in Function of void return type") != std::string::npos) {
+        return "Function declared as 'void' cannot return a value. Remove the return statement or change function return type.";
+    }
+    
+    if (error.find("Found return instr that returns non-void") != std::string::npos) {
+        return "Function declared as 'void' cannot return a value. Remove the return statement or change function return type.";
+    }
+    
+    if (error.find("Function does not return a value") != std::string::npos) {
+        return "Function must return a value. Add a return statement or change function return type to 'void'.";
+    }
+    
+    if (error.find("does not have terminator") != std::string::npos) {
+        return "Function must return a value. Add a return statement or change function return type to 'void'.";
+    }
+    
+    if (error.find("Undefined variable") != std::string::npos) {
+        return "Undefined variable referenced in code generation.";
+    }
+    
+    if (error.find("Type mismatch") != std::string::npos) {
+        return "Type mismatch detected during code generation.";
+    }
+    
+    // If we can't parse the error, return a generic message with the original error
+    return "Code generation verification failed: " + error;
 }
 
 llvm::Type* CodeGenerator::get_llvm_type(const Type& type) {

@@ -32,6 +32,10 @@ private:
     std::vector<std::string> errors_;
     DiagnosticReporter diagnostics_;
     
+    // Track current function for return statement analysis
+    std::string current_function_name_;
+    std::string current_function_return_type_;
+    
     // Helper methods
     void error(const std::string& message, const SourcePos& position);
     void add_error(const std::string& message);

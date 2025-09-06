@@ -49,6 +49,7 @@ private:
     // Helper methods
     void error(const std::string& message);
     void error(const std::string& message, const SourcePos& position);
+    std::string parse_verification_error(const std::string& error);
     
     // Type conversion
     llvm::Type* get_llvm_type(const Type& type);
