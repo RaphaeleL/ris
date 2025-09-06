@@ -59,7 +59,7 @@ int test_semantic_valid_program() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -80,7 +80,7 @@ int test_semantic_undefined_variable() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -101,7 +101,7 @@ int test_semantic_duplicate_variable() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -122,7 +122,7 @@ int test_semantic_type_mismatch() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -154,7 +154,7 @@ int test_semantic_arithmetic_operations() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -185,7 +185,7 @@ int test_semantic_boolean_operations() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -217,7 +217,7 @@ int test_semantic_comparison_operations() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -249,7 +249,7 @@ int test_semantic_function_calls() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -280,7 +280,7 @@ int test_semantic_wrong_argument_count() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -301,7 +301,7 @@ int test_semantic_undefined_function() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -342,7 +342,7 @@ int test_semantic_control_flow() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -375,7 +375,7 @@ int test_semantic_scope_handling() {
     ASSERT_FALSE(result);
     ASSERT_TRUE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -405,7 +405,7 @@ int test_semantic_implicit_conversions() {
     ASSERT_TRUE(result);
     ASSERT_FALSE(analyzer.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 

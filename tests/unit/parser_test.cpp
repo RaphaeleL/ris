@@ -48,7 +48,7 @@ int test_parser_basic_function() {
     ASSERT_TRUE(func->body != nullptr);
     ASSERT_EQ(1, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -73,7 +73,7 @@ int test_parser_function_with_parameters() {
     ASSERT_EQ("int", func->parameters[1].first);
     ASSERT_EQ("b", func->parameters[1].second);
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -100,7 +100,7 @@ int test_parser_variable_declaration() {
     ASSERT_EQ("int", var2->type);
     ASSERT_TRUE(var2->initializer == nullptr);
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -120,7 +120,7 @@ int test_parser_arithmetic_expressions() {
     auto& func = program->functions[0];
     ASSERT_EQ(2, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -139,7 +139,7 @@ int test_parser_logical_expressions() {
     auto& func = program->functions[0];
     ASSERT_EQ(2, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -158,7 +158,7 @@ int test_parser_if_statement() {
     auto& func = program->functions[0];
     ASSERT_EQ(1, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -177,7 +177,7 @@ int test_parser_while_statement() {
     auto& func = program->functions[0];
     ASSERT_EQ(1, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -196,7 +196,7 @@ int test_parser_for_statement() {
     auto& func = program->functions[0];
     ASSERT_EQ(1, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -220,7 +220,7 @@ int test_parser_return_statement() {
     ASSERT_EQ("void", func2->return_type);
     ASSERT_EQ(1, func2->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -239,7 +239,7 @@ int test_parser_function_call() {
     auto& func = program->functions[0];
     ASSERT_EQ(2, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -288,7 +288,7 @@ int test_parser_complex_program() {
     ASSERT_EQ("int", main->return_type);
     ASSERT_EQ(0, main->parameters.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -311,7 +311,7 @@ int test_parser_error_handling() {
     
     ASSERT_TRUE(parser2.has_error());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -343,7 +343,7 @@ int test_parser_switch_statement() {
     ASSERT_EQ("main", func->name);
     ASSERT_EQ(2, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -363,7 +363,7 @@ int test_parser_break_statement() {
     ASSERT_EQ("main", func->name);
     ASSERT_EQ(2, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -383,7 +383,7 @@ int test_parser_continue_statement() {
     ASSERT_EQ("main", func->name);
     ASSERT_EQ(2, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -403,7 +403,7 @@ int test_parser_list_literal() {
     ASSERT_EQ("main", func->name);
     ASSERT_EQ(2, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -423,7 +423,7 @@ int test_parser_list_method_calls() {
     ASSERT_EQ("main", func->name);
     ASSERT_EQ(5, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -443,7 +443,7 @@ int test_parser_list_indexing() {
     ASSERT_EQ("main", func->name);
     ASSERT_EQ(3, func->body->statements.size());
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 

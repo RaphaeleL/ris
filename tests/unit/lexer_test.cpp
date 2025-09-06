@@ -47,7 +47,7 @@ int test_lexer_basic() {
     ASSERT_EQ(ris::TokenType::SEMICOLON, tokens[7].type);
     ASSERT_EQ(ris::TokenType::RIGHT_BRACE, tokens[8].type);
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -70,7 +70,7 @@ int test_lexer_keywords() {
         ASSERT_EQ(expected_types[i], tokens[i].type);
     }
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -93,7 +93,7 @@ int test_lexer_operators() {
         ASSERT_EQ(expected_types[i], tokens[i].type);
     }
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -117,7 +117,7 @@ int test_lexer_literals() {
     ASSERT_EQ(ris::TokenType::STRING_LITERAL, tokens[3].type);
     ASSERT_EQ("hello", tokens[3].value);
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -138,7 +138,7 @@ int test_lexer_identifiers() {
     ASSERT_EQ(ris::TokenType::IDENTIFIER, tokens[2].type);
     ASSERT_EQ("var123", tokens[2].value);
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -161,7 +161,7 @@ int test_lexer_punctuation() {
         ASSERT_EQ(expected_types[i], tokens[i].type);
     }
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -187,7 +187,7 @@ int test_lexer_comments() {
     ASSERT_EQ("z", tokens[7].value);
     ASSERT_EQ(ris::TokenType::SEMICOLON, tokens[8].type);
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -207,7 +207,7 @@ int test_lexer_whitespace() {
     ASSERT_EQ("42", tokens[3].value);
     ASSERT_EQ(ris::TokenType::SEMICOLON, tokens[4].type);
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
@@ -240,7 +240,7 @@ int test_lexer_escape_sequences() {
     ASSERT_EQ(ris::TokenType::STRING_LITERAL, tokens[6].type);
     ASSERT_EQ("hello\nworld", tokens[6].value);
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <sstream>
 #include "test_utils.h"
 
 // Forward declarations
@@ -65,13 +66,10 @@ struct TestFunction {
 
 // Diagnostics test function
 int test_diagnostics() {
-    std::cout << "Running test_diagnostics...";
-    
     // Test basic diagnostic functionality
     // Note: This is a simplified test since we can't easily test the full diagnostic system
     // without including all the headers and dependencies
     
-    std::cout << " ✓" << std::endl;
     return 0;
 }
 
@@ -143,7 +141,27 @@ int main() {
     
     // Run all tests
     for (const auto& test : tests) {
+        // Print the aligned test start
+        test_utils::print_test_start(test.name, max_length);
+        
+        // Redirect stdout to suppress test function output
+        std::streambuf* original_cout = std::cout.rdbuf();
+        std::ostringstream dev_null;
+        std::cout.rdbuf(dev_null.rdbuf());
+        
+        // Run the test function
         int test_result = test.func();
+        
+        // Restore stdout
+        std::cout.rdbuf(original_cout);
+        
+        // Print the result
+        if (test_result == 0) {
+            test_utils::print_test_success();
+        } else {
+            test_utils::print_test_failure("Test failed");
+        }
+        
         result += test_result;
     }
     

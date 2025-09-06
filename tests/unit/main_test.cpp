@@ -25,7 +25,7 @@ int test_main_basic() {
     // Basic test - this will be expanded as we implement more functionality
     ASSERT_TRUE(true);
     
-    std::cout << " OK" << std::endl;
+    
     return 0;
 }
 
