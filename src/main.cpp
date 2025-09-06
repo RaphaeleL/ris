@@ -92,8 +92,16 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
+    // Check if std library is included
+    bool needs_std_lib = lexer.includes_std();
+    
     if (verbose) {
         std::cout << "Tokenized " << tokens.size() << " tokens" << std::endl;
+        if (needs_std_lib) {
+            std::cout << "Std library will be linked (found #include <std>)" << std::endl;
+        } else {
+            std::cout << "Std library will NOT be linked (no #include <std> found)" << std::endl;
+        }
     }
     
     // Parse the tokens into AST
@@ -151,7 +159,7 @@ int main(int argc, char* argv[]) {
         
         // Use LLVM toolchain: llc -> clang for linking
         std::string asm_output = "out/temp_output.s";
-        std::string runtime_lib = "runtime/std.a";
+        std::string std_lib = "runtime/std.a";
         std::string final_output = output_file;
         
         #ifdef _WIN32
@@ -172,8 +180,11 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         
-        // Step 2: Use clang to link assembly with runtime library
-        std::string link_cmd = "clang++ -o " + final_output + " " + asm_output + " " + runtime_lib;
+        // Step 2: Use clang to link assembly with runtime library (if needed)
+        std::string link_cmd = "clang++ -o " + final_output + " " + asm_output;
+        if (needs_std_lib) {
+            link_cmd += " " + std_lib;
+        }
         
         if (verbose) {
             std::cout << "Running: " << link_cmd << std::endl;

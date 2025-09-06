@@ -38,6 +38,7 @@ enum class TokenType {
     // Preprocessor directives
     HASH,
     INCLUDE,
+    SYSTEM_INCLUDE,
     
     // Special
     UNKNOWN

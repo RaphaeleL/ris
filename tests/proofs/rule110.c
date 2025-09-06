@@ -1,6 +1,8 @@
 // Rule 110 Cellular Automaton Implementation
 // Rule 110 is a 1D cellular automaton that has been proven to be Turing complete
 
+#include <std>
+
 int main() {
     println("Rule 110 Cellular Automaton");
     println("--------------------------");

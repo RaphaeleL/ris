@@ -28,6 +28,9 @@ public:
     // Check if there were any errors
     bool has_error() const { return has_error_; }
     const std::string& error_message() const { return error_message_; }
+    
+    // Check if std library is included
+    bool includes_std() const { return includes_std_; }
 
 private:
     std::string source_;
@@ -37,6 +40,7 @@ private:
     size_t current_column_;
     bool has_error_;
     std::string error_message_;
+    bool includes_std_;
     
     // Helper methods
     char current_char() const;

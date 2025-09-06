@@ -7,7 +7,7 @@ namespace ris {
 
 Lexer::Lexer(const std::string& source, const std::string& source_dir) 
     : source_(source), source_dir_(source_dir), current_pos_(0), current_line_(1), current_column_(1), 
-      has_error_(false), error_message_("") {
+      has_error_(false), error_message_(""), includes_std_(false) {
 }
 
 Token Lexer::next_token() {
@@ -120,6 +120,9 @@ std::vector<Token> Lexer::tokenize() {
                     tokens.push_back(include_token);
                 }
             }
+        } else if (token.type == TokenType::SYSTEM_INCLUDE) {
+            // System includes (like #include <std>) are not processed - just skip them
+            // The includes_std_ flag has already been set if needed
         } else {
             tokens.push_back(token);
             
@@ -448,10 +451,11 @@ Token Lexer::scan_preprocessor() {
         // Skip whitespace after 'include'
         skip_whitespace();
         
-        // Read the filename (expecting quotes)
+        std::string filename;
+        
+        // Read the filename (expecting quotes or angle brackets)
         if (current_char() == '"') {
             advance(); // consume opening quote
-            std::string filename;
             while (!is_at_end() && current_char() != '"') {
                 filename += advance();
             }
@@ -468,9 +472,32 @@ Token Lexer::scan_preprocessor() {
             }
             
             return Token(TokenType::INCLUDE, filename, start_pos);
+        } else if (current_char() == '<') {
+            advance(); // consume opening angle bracket
+            while (!is_at_end() && current_char() != '>') {
+                filename += advance();
+            }
+            if (is_at_end()) {
+                has_error_ = true;
+                error_message_ = "Unterminated include filename";
+                return Token(TokenType::UNKNOWN, "", start_pos);
+            }
+            advance(); // consume closing angle bracket
+            
+            // Check if this is #include <std>
+            if (filename == "std") {
+                includes_std_ = true;
+            }
+            
+            // Skip to end of line
+            while (!is_at_end() && current_char() != '\n') {
+                advance();
+            }
+            
+            return Token(TokenType::SYSTEM_INCLUDE, filename, start_pos);
         } else {
             has_error_ = true;
-            error_message_ = "Expected quoted filename after #include";
+            error_message_ = "Expected quoted filename or angle brackets after #include";
             return Token(TokenType::UNKNOWN, "", start_pos);
         }
     } else {
