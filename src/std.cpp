@@ -94,7 +94,6 @@ size_t ris_string_length(const char* str) {
     return str ? std::strlen(str) : 0;
 }
 
-
 void ris_exit(int32_t code) {
     std::exit(code);
 }

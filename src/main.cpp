@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     file.close();
 
     // Get the directory of the source file
-    std::filesystem::path input_path(input_file);
+    // std::filesystem::path input_path(input_file);
     std::string source_dir = input_path.parent_path().string();
     if (source_dir.empty()) {
         source_dir = ".";
