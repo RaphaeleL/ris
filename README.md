@@ -85,11 +85,6 @@ out/bin/risc tests/integration/function_basic.ris --run
 | Go                                                      | 0.224s   | Rule110     |                   |
 | Go                                                      | 0.014s   | Rule110     | build and run     |
 
-## Clean / Install
+## License
 
-```bash
-make clean
-make -B
-sudo make install
-```
-
+This project is available for educational purposes.

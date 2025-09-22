@@ -110,10 +110,11 @@ clean:
 	$(ECHO_RM) out
 	@rm -rf out
 
+# TODO: breaking due to the runtime library link during the compilation of the .risc file
 # Install (optional)
-install: $(TARGET)
-	$(ECHO_CP) $(TARGET) /usr/local/bin/
-	@cp $(TARGET) /usr/local/bin/
+# install: $(TARGET)
+# 	$(ECHO_CP) $(TARGET) /usr/local/bin/
+# 	@cp $(TARGET) /usr/local/bin/
 
 # Help
 help:
