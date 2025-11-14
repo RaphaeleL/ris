@@ -4,9 +4,11 @@
 #include "./build.h"
 
 Cmd cmd = {0};
+Timer timer = {0};
 
 int main() {
     auto_rebuild("build.c");
+    timer_start(&timer);
 
     char *source_files[][2] = {
         {"src/ast.cpp", "out/build/ast.o"},
@@ -63,6 +65,11 @@ int main() {
          "runtime/std.a", "-lLLVM", "-o", "out/bin/risc");
 
     if (!run_always(&cmd)) return EXIT_FAILURE;
+
+
+    double elapsed_ms = timer_elapsed(&timer);
+    timer_reset(&timer);
+    info("Finished in %.3f seconds.\n", elapsed_ms);
 
     return EXIT_SUCCESS;
 }
