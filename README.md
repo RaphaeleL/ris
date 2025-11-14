@@ -17,8 +17,11 @@ RIS is a small programming language and compiler implemented in C++17 that targe
 
 ## Build
 
+Just use [build.h](https://github.com/RaphaeleL/build.h) to generate a build script and build the project. Alternatively, you can use the provided Makefile and run `make`.
+
 ```bash
-make # builds the compiler at src → out/bin/risc
+gcc -o build build.c  # Generate build script
+./build               # Build the project (automatically rebuilds on changes)
 ```
 
 Artifacts:
