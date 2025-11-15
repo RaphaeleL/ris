@@ -24,11 +24,11 @@ int main() {
         {"src/types.cpp", "out/build/types.o"},
     };
 
-    push(&cmd, "rm", "-rf", "out");
-    if (!run_always(&cmd)) return EXIT_FAILURE;
+    // push(&cmd, "rm", "-rf", "out");
+    // if (!run_always(&cmd)) return EXIT_FAILURE;
     push(&cmd, "mkdir", "-p", "out/build");
     if (!run_always(&cmd)) return EXIT_FAILURE;
-    push(&cmd, "mkdir", "-p", "out/build");
+    push(&cmd, "mkdir", "-p", "out/bin");
     if (!run_always(&cmd)) return EXIT_FAILURE;
 
     for (size_t i = 0; i < ARRAY_LEN(source_files); i++) {
@@ -48,10 +48,6 @@ int main() {
     push(&cmd, "ar", "rcs", "runtime/std.a", "out/build/std.o");
     if (!run_always(&cmd)) return EXIT_FAILURE;
 
-
-    push(&cmd, "mkdir", "-p", "out/bin");
-    if (!run_always(&cmd)) return EXIT_FAILURE;
-
     push(&cmd, "clang++", "-std=c++17", "-Wall", "-Wextra", "-O2", "-g",
          "-Wno-unused-parameter", "-Wno-deprecated-declarations",
          "-stdlib=libc++", "-fno-exceptions", "-funwind-tables",
@@ -64,8 +60,7 @@ int main() {
          "out/build/symbol_table.o", "out/build/token.o", "out/build/types.o",
          "runtime/std.a", "-lLLVM", "-o", "out/bin/risc");
 
-    if (!run_always(&cmd)) return EXIT_FAILURE;
-
+    if (!run(&cmd)) return EXIT_FAILURE;
 
     double elapsed_ms = timer_elapsed(&timer);
     timer_reset(&timer);
