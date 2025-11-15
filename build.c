@@ -24,12 +24,9 @@ int main() {
         {"src/types.cpp", "out/build/types.o"},
     };
 
-    // push(&cmd, "rm", "-rf", "out");
-    // if (!run_always(&cmd)) return EXIT_FAILURE;
-    push(&cmd, "mkdir", "-p", "out/build");
-    if (!run_always(&cmd)) return EXIT_FAILURE;
-    push(&cmd, "mkdir", "-p", "out/bin");
-    if (!run_always(&cmd)) return EXIT_FAILURE;
+    mkdir_if_not_exists("out");
+    mkdir_if_not_exists("out/build");
+    mkdir_if_not_exists("out/bin");
 
     for (size_t i = 0; i < ARRAY_LEN(source_files); i++) {
         push(&cmd, "clang++");
